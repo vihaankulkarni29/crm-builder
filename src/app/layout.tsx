@@ -11,6 +11,8 @@ export const metadata: Metadata = {
     description: "CRM for Creative Agency",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -23,6 +25,7 @@ export default function RootLayout({
                 <main className="flex-1 overflow-y-auto bg-background p-8">
                     {children}
                 </main>
+                <Toaster />
             </body>
         </html>
     );

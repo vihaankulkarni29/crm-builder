@@ -1,12 +1,44 @@
 import { BackgroundCircles } from "@/components/ui/background-circles";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, Briefcase, Activity } from "lucide-react";
+import { getLeads, getInvoices, getProjects } from "@/lib/data";
+import { DashboardMetricCard } from "@/components/ui/dashboard-overview";
 
-export default function Dashboard() {
+export const revalidate = 0;
+
+export default async function Dashboard() {
+    const [leads, invoices, projects] = await Promise.all([
+        getLeads(),
+        getInvoices(),
+        getProjects()
+    ]);
+
+    // 1. Total Revenue: Sum of all PAID invoices
+    const totalRevenue = invoices
+        .filter(inv => inv.status === 'Paid')
+        .reduce((sum, inv) => sum + inv.amount, 0);
+
+    const revenueFormatter = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 0
+    });
+
+    // 2. Active Leads: Status != Closed
+    const activeLeads = leads.filter(l => l.status !== 'Closed').length;
+
+    // 3. Active Projects: Status != Completed (Assuming 'Completed' is a status, otherwise all)
+    const activeProjects = projects.filter(p => p.status !== 'Completed').length;
+
+    // 4. Efficiency: Mock calculation or based on ratio
+    // For now, let's make it ratio of On Track projects
+    const onTrackProjects = projects.filter(p => p.status === 'On Track').length;
+    const efficiency = projects.length > 0 ? Math.round((onTrackProjects / projects.length) * 100) : 100;
+
     return (
         <div className="relative min-h-screen">
             {/* Background Layer */}
-            <div className="absolute inset-0 z-0 opacity-40 pointer-events-none">
+            <div className="absolute inset-0 z-0 pointer-events-none">
                 <BackgroundCircles title="" description="" />
             </div>
 
@@ -21,10 +53,34 @@ export default function Dashboard() {
 
                 {/* Metrics Grid - Spaced Out */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <DashboardCard title="Total Revenue" value="₹4,231,000" icon={DollarSign} trend="+20.1%" />
-                    <DashboardCard title="Active Leads" value="12" icon={Users} trend="+2 new" />
-                    <DashboardCard title="Projects" value="8" icon={Briefcase} trend="3 nearing deadline" />
-                    <DashboardCard title="Efficiency" value="94.2%" icon={Activity} trend="+1.2%" />
+                    <DashboardMetricCard
+                        title="Total Revenue"
+                        value={revenueFormatter.format(totalRevenue)}
+                        icon={DollarSign}
+                        trendChange="+20.1%"
+                        trendType="up"
+                    />
+                    <DashboardMetricCard
+                        title="Active Leads"
+                        value={activeLeads.toString()}
+                        icon={Users}
+                        trendChange={`${leads.length - activeLeads} closed`}
+                        trendType="neutral"
+                    />
+                    <DashboardMetricCard
+                        title="Active Projects"
+                        value={activeProjects.toString()}
+                        icon={Briefcase}
+                        trendChange={`${projects.length} total`}
+                        trendType="neutral"
+                    />
+                    <DashboardMetricCard
+                        title="Efficiency"
+                        value={`${efficiency}%`}
+                        icon={Activity}
+                        trendChange="On Track"
+                        trendType={efficiency >= 80 ? 'up' : 'down'}
+                    />
                 </div>
 
                 {/* Action Area (Placeholder for Graphs/tables) */}
@@ -55,22 +111,5 @@ export default function Dashboard() {
                 </div>
             </div>
         </div>
-    );
-}
-
-// Helper Component for consistency
-// @ts-ignore
-function DashboardCard({ title, value, icon: Icon, trend }: any) {
-    return (
-        <Card className="bg-card/50 backdrop-blur-sm border-primary/10 shadow-sm transition-all hover:shadow-md hover:border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{title}</CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-                <div className="text-2xl font-bold">{value}</div>
-                <p className="text-xs text-muted-foreground">{trend}</p>
-            </CardContent>
-        </Card>
     );
 }

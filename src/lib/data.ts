@@ -36,6 +36,26 @@ export async function getInvoices(): Promise<Invoice[]> {
     }))
 }
 
+export async function getProjects(): Promise<Project[]> {
+    const { data, error } = await supabase.from('projects').select('*').order('deadline', { ascending: true })
+
+    if (error) {
+        console.error("Error fetching projects:", error)
+        return []
+    }
+
+    return (data || []).map((project: any) => ({
+        id: project.id,
+        name: project.name,
+        head: {
+            name: project.head,
+            avatar: "https://github.com/shadcn.png", // Placeholder avatar
+        },
+        status: project.status,
+        deadline: project.deadline,
+    }))
+}
+
 export const leads: Lead[] = [
     {
         id: "1",

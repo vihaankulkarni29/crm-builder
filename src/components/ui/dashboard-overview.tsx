@@ -32,7 +32,7 @@ export interface DashboardMetricCardProps {
  * A professional, animated metric card for admin dashboards.
  * Displays a key value, title, icon, and trend indicator with Framer Motion hover effects.
  */
-const DashboardMetricCard: React.FC<DashboardMetricCardProps> = ({
+export const DashboardMetricCard: React.FC<DashboardMetricCardProps> = ({
     value,
     title,
     icon: IconComponent,

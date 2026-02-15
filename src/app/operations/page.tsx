@@ -1,12 +1,18 @@
 import { ProjectTable } from "@/components/operations/ProjectTable"
-import { projects } from "@/lib/data"
+import { getProjects } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AddProjectDialog } from "@/components/operations/AddProjectDialog"
 
-export default function OperationsPage() {
+export const revalidate = 0;
+
+export default async function OperationsPage() {
+    const projects = await getProjects()
+
     return (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold tracking-tight">Operations</h1>
+                <AddProjectDialog />
             </div>
 
             <Tabs defaultValue="all" className="w-full">
@@ -27,3 +33,4 @@ export default function OperationsPage() {
         </div>
     )
 }
+

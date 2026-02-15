@@ -30,38 +30,34 @@ export const BackgroundCircles = ({
             </div>
 
             {/* Animated Circles */}
-            <motion.div
-                animate={{
-                    rotate: 360,
-                }}
-                transition={{
-                    duration: 50,
-                    repeat: Infinity,
-                    ease: "linear",
-                }}
-                className="absolute -top-[50%] left-[50%] h-[1000px] w-[1000px] -translate-x-[50%] rounded-full border border-neutral-200 dark:border-neutral-800 opacity-20"
+            transition={{
+                duration: 20,
+                repeat: Infinity,
+                ease: "linear",
+            }}
+            className="absolute top-1/2 left-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-200 dark:border-neutral-800 opacity-60"
             />
             <motion.div
                 animate={{
                     rotate: -360,
                 }}
                 transition={{
-                    duration: 70,
+                    duration: 30, // faster
                     repeat: Infinity,
                     ease: "linear",
                 }}
-                className="absolute -top-[60%] left-[50%] h-[1200px] w-[1200px] -translate-x-[50%] rounded-full border border-neutral-200 dark:border-neutral-800 opacity-20"
+                className="absolute top-1/2 left-1/2 h-[1000px] w-[1000px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-200 dark:border-neutral-800 opacity-50"
             />
             <motion.div
                 animate={{
                     rotate: 360,
                 }}
                 transition={{
-                    duration: 90,
+                    duration: 40,
                     repeat: Infinity,
                     ease: "linear",
                 }}
-                className="absolute -top-[70%] left-[50%] h-[1400px] w-[1400px] -translate-x-[50%] rounded-full border border-neutral-200 dark:border-neutral-800 opacity-20"
+                className="absolute top-1/2 left-1/2 h-[1200px] w-[1200px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-200 dark:border-neutral-800 opacity-40"
             />
         </div>
     );

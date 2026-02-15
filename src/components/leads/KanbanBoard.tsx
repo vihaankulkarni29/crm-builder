@@ -8,7 +8,8 @@ import { MoreHorizontal, Plus } from "lucide-react"
 
 import { useState, useEffect } from "react"
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
-import { updateLeadStatus } from "@/app/actions"
+import { updateLeadStatus, convertLeadToProject } from "@/app/actions"
+import { toast } from "sonner"
 
 interface KanbanBoardProps {
     initialLeads: Lead[]
@@ -28,7 +29,7 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
         setLeads(initialLeads)
     }, [initialLeads])
 
-    const onDragEnd = (result: DropResult) => {
+    const onDragEnd = async (result: DropResult) => {
         const { destination, source, draggableId } = result
 
         if (!destination) return
@@ -52,7 +53,15 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
         setLeads(updatedLeads)
 
         // Server Update
-        updateLeadStatus(draggableId, newStatus)
+        if (newStatus === 'Closed' && source.droppableId !== 'Closed') {
+            toast.promise(convertLeadToProject(draggableId, draggedLead.companyName), {
+                loading: 'Converting Lead to Project...',
+                success: (data) => `Project created for ${draggedLead.companyName}`,
+                error: 'Failed to convert lead',
+            })
+        } else {
+            await updateLeadStatus(draggableId, newStatus)
+        }
     }
 
     return (
