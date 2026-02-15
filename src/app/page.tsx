@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Users, Briefcase, Activity } from "lucide-react";
 import { getLeads, getInvoices, getProjects } from "@/lib/data";
 import { DashboardMetricCard } from "@/components/ui/dashboard-overview";
+import { RevenueChart } from "@/components/ui/revenue-chart";
 
 export const revalidate = 0;
 
@@ -90,8 +91,8 @@ export default async function Dashboard() {
                             <CardTitle>Revenue Overview</CardTitle>
                         </CardHeader>
                         <CardContent className="pl-2">
-                            <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                                [Graph Component Here]
+                            <div className="h-[200px] w-full">
+                                <RevenueChart />
                             </div>
                         </CardContent>
                     </Card>
@@ -113,3 +114,4 @@ export default async function Dashboard() {
         </div>
     );
 }
+
