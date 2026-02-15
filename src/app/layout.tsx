@@ -25,7 +25,7 @@ export default function RootLayout({
                 <main className="flex-1 overflow-y-auto bg-background p-8">
                     {children}
                 </main>
-                <Toaster />
+                <Toaster theme="dark" position="top-right" />
             </body>
         </html>
     );

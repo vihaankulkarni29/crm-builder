@@ -23,6 +23,8 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
+import { toast } from "sonner"
+
 export function AddProjectDialog() {
     const [open, setOpen] = useState(false)
 
@@ -30,6 +32,7 @@ export function AddProjectDialog() {
     async function handleSubmit(formData: FormData) {
         await addProject(formData)
         setOpen(false)
+        toast.success("Project created successfully")
     }
 
     return (

@@ -16,13 +16,20 @@ import { Plus } from "lucide-react"
 import { addLead } from "@/app/actions"
 import { useState } from "react"
 
+import { toast } from "sonner"
+
 export function AddLeadDialog() {
     const [open, setOpen] = useState(false)
 
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
-        await addLead(formData)
-        setOpen(false) // Close dialog on success
+        const result = await addLead(formData)
+        if (result?.errors) {
+            toast.error("Failed to add lead. Please check the form.")
+            return
+        }
+        setOpen(false)
+        toast.success("Lead added to the pipeline")
     }
 
     return (

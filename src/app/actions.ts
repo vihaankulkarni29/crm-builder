@@ -121,23 +121,23 @@ export async function addProject(formData: FormData) {
     return { message: 'Project added successfully' }
 }
 
-export async function convertLeadToProject(leadId: string, leadName: string) {
-    // 1. Create new Project
+export async function convertLeadToProject(leadId: string, companyName: string) {
+    // 1. Create the Project
     const { error: projectError } = await supabase
         .from('projects')
         .insert([{
-            name: leadName,
-            head: 'Vihaan', // Default head
+            name: `${companyName} Campaign`, // Auto-naming
+            head: 'Unassigned',
             status: 'Onboarding',
-            deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // Default deadline: 2 weeks from now
+            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Default 7 days
         }])
 
     if (projectError) {
         console.error('Error creating project from lead:', projectError)
-        return { message: 'Failed to create project' }
+        return { success: false, message: 'Failed to create project' }
     }
 
-    // 2. Update Lead Status to Closed
+    // 2. Mark Lead as Closed (if not already)
     const { error: leadError } = await supabase
         .from('leads')
         .update({ status: 'Closed' })
@@ -145,10 +145,9 @@ export async function convertLeadToProject(leadId: string, leadName: string) {
 
     if (leadError) {
         console.error('Error updating lead status:', leadError)
-        // Note: Project was already created, might want to handle rollback in a real app
     }
 
     revalidatePath('/operations')
     revalidatePath('/leads')
-    return { message: 'Lead converted to Project successfully' }
+    return { success: true, message: `Project created for ${companyName}` }
 }

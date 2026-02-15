@@ -54,10 +54,14 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
 
         // Server Update
         if (newStatus === 'Closed' && source.droppableId !== 'Closed') {
-            toast.promise(convertLeadToProject(draggableId, draggedLead.companyName), {
+            toast.promise(async () => {
+                const result = await convertLeadToProject(draggableId, draggedLead.companyName)
+                if (!result.success) throw new Error(result.message)
+                return result.message
+            }, {
                 loading: 'Converting Lead to Project...',
-                success: (data) => `Project created for ${draggedLead.companyName}`,
-                error: 'Failed to convert lead',
+                success: (message) => message,
+                error: (err) => err.message || 'Failed to convert lead',
             })
         } else {
             await updateLeadStatus(draggableId, newStatus)

@@ -115,13 +115,13 @@ describe('Server Actions', () => {
         it('should create project and update lead status', async () => {
             const result = await convertLeadToProject('lead-123', 'New Client Co')
 
-            expect(result).toEqual({ message: 'Lead converted to Project successfully' })
+            expect(result).toEqual({ success: true, message: 'Project created for New Client Co' })
 
             // Check Project Creation
             expect(mockFrom).toHaveBeenCalledWith('projects')
             expect(mockInsert).toHaveBeenCalledWith([expect.objectContaining({
-                name: 'New Client Co',
-                head: 'Vihaan',
+                name: 'New Client Co Campaign',
+                head: 'Unassigned',
                 status: 'Onboarding'
             })])
 
