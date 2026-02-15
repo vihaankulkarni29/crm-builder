@@ -1,4 +1,40 @@
 import { Lead, Project, Invoice } from "@/types"
+import { supabase } from "@/lib/supabase"
+
+export async function getLeads(): Promise<Lead[]> {
+    const { data, error } = await supabase.from('leads').select('*')
+
+    if (error) {
+        console.error("Error fetching leads:", error)
+        return []
+    }
+
+    return (data || []).map((lead: any) => ({
+        id: lead.id,
+        companyName: lead.company, // Mapping 'company' -> 'companyName'
+        poc: lead.contact_person,   // Mapping 'contact_person' -> 'poc'
+        value: lead.value,
+        status: lead.status,
+        source: lead.source,
+    }))
+}
+
+export async function getInvoices(): Promise<Invoice[]> {
+    const { data, error } = await supabase.from('invoices').select('*').order('date', { ascending: false })
+
+    if (error) {
+        console.error("Error fetching invoices:", error)
+        return []
+    }
+
+    return (data || []).map((inv: any) => ({
+        id: inv.id,
+        clientName: inv.client_name,
+        amount: inv.amount,
+        status: inv.status,
+        date: inv.date,
+    }))
+}
 
 export const leads: Lead[] = [
     {
