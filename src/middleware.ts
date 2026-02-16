@@ -2,20 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-    const session = request.cookies.get('rfrncs_session')
+    // Check for the "auth" cookie
+    const authCookie = request.cookies.get('rfrncs_auth')
 
-    // Exclude login page and static files/assets
-    if (
-        request.nextUrl.pathname.startsWith('/login') ||
-        request.nextUrl.pathname.startsWith('/_next') ||
-        request.nextUrl.pathname.startsWith('/static') ||
-        request.nextUrl.pathname.match(/\.(png|jpg|jpeg|svg|ico)$/)
-    ) {
-        return NextResponse.next()
-    }
-
-    // Check if session cookie exists
-    if (!session) {
+    // If no cookie and trying to access protected pages, redirect to Login
+    if (!authCookie && request.nextUrl.pathname !== '/login') {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
