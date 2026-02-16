@@ -67,8 +67,10 @@ export function AddProjectDialog() {
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="Vihaan">Vihaan</SelectItem>
-                                    <SelectItem value="Creative Lead">Creative Lead</SelectItem>
-                                    <SelectItem value="Ops Head">Ops Head</SelectItem>
+                                    <SelectItem value="Zaid">Zaid</SelectItem>
+                                    <SelectItem value="Brendand">Brendand</SelectItem>
+                                    <SelectItem value="Ritwik">Ritwik</SelectItem>
+                                    <SelectItem value="Pratik">Pratik</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
