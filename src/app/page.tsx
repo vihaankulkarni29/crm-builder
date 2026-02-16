@@ -58,7 +58,7 @@ export default async function Dashboard() {
                 />
 
                 {/* Revenue Chart */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-4 lg:grid-cols-7">
                     <div className="col-span-4 rounded-xl border bg-card/50 backdrop-blur-sm p-6 text-card-foreground shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight mb-4">Revenue Trajectory</h3>
                         <div className="h-[200px] w-full mt-4">

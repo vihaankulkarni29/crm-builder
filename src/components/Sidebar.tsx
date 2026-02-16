@@ -17,7 +17,7 @@ export function Sidebar() {
     const pathname = usePathname()
 
     return (
-        <div className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
+        <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
             <div className="flex h-16 items-center border-b px-6">
                 <span className="text-xl font-bold tracking-tight">RFRNCS OS</span>
             </div>
