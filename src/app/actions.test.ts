@@ -16,7 +16,7 @@ const { mockInsert, mockSelect, mockUpdate, mockEq, mockFrom } = vi.hoisted(() =
 })
 
 vi.mock('@/lib/supabase', () => ({
-    supabase: {
+    supabaseAdmin: {
         from: mockFrom,
     },
 }))
