@@ -1,6 +1,6 @@
 'use server'
 
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin as supabase } from '@/lib/supabase'
 import { revalidatePath } from 'next/cache'
 
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'

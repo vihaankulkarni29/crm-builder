@@ -20,10 +20,19 @@ export default async function Dashboard() {
 
     // Prepare Chart Data (Final Sprint Protocol)
     const chartData = [
-        { name: "Jan", total: invoices.filter(i => i.date.includes("-01-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
-        { name: "Feb", total: invoices.filter(i => i.date.includes("-02-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
-        { name: "Mar", total: invoices.filter(i => i.date.includes("-03-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
+        { name: "Jan", total: 0 }, { name: "Feb", total: 0 }, { name: "Mar", total: 0 },
+        { name: "Apr", total: 0 }, { name: "May", total: 0 }, { name: "Jun", total: 0 }
     ];
+
+    // Fill data from real invoices
+    invoices.forEach(inv => {
+        if (inv.status === 'Paid') {
+            const month = new Date(inv.date).getMonth(); // 0 = Jan
+            if (month < 6) { // Just for first 6 months as example
+                chartData[month].total += Number(inv.amount);
+            }
+        }
+    });
 
     return (
         <div className="relative min-h-screen overflow-hidden">
@@ -52,7 +61,7 @@ export default async function Dashboard() {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                     <div className="col-span-4 rounded-xl border bg-card/50 backdrop-blur-sm p-6 text-card-foreground shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight mb-4">Revenue Trajectory</h3>
-                        <div className="h-[200px] w-full">
+                        <div className="h-[200px] w-full mt-4">
                             <RevenueChart data={chartData} />
                         </div>
                     </div>

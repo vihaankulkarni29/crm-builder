@@ -1,5 +1,5 @@
 import { Lead, Project, Invoice } from "@/types"
-import { supabase } from "@/lib/supabase"
+import { supabaseAdmin as supabase } from "@/lib/supabase"
 
 export async function getLeads(): Promise<Lead[]> {
     const { data, error } = await supabase.from('leads').select('*')

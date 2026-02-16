@@ -2,13 +2,11 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
-// We accept data as a prop so the Server Component can pass real DB data
 export function RevenueChart({ data }: { data: any[] }) {
-    // If no data, show a placeholder
     if (!data || data.length === 0) {
         return (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-                No revenue data yet. Add invoices to see the chart.
+                No revenue data yet.
             </div>
         );
     }
@@ -16,7 +14,7 @@ export function RevenueChart({ data }: { data: any[] }) {
     return (
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" opacity={0.2} />
                 <XAxis
                     dataKey="name"
                     stroke="#888888"
@@ -33,7 +31,7 @@ export function RevenueChart({ data }: { data: any[] }) {
                 />
                 <Tooltip
                     cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', background: '#1a1a1a', color: '#fff' }}
+                    contentStyle={{ borderRadius: '8px', border: '1px solid #333', background: '#000', color: '#fff' }}
                     formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
                 />
                 <Bar
