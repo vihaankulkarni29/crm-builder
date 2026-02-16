@@ -5,18 +5,27 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 export default function LoginPage() {
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const router = useRouter()
 
     const handleLogin = () => {
-        // Ideally this check happens server-side, but for tonight's deadline:
+        // 1. Master Password Check (Bypasses username)
         if (password === 'rfrncs2026') {
-            // Set a cookie that lasts 1 day
             document.cookie = "rfrncs_auth=true; path=/; max-age=86400";
             router.push('/');
-        } else {
-            alert('Access Denied');
+            return;
         }
+
+        // 2. Specific User Check
+        if (username === 'zaidrfrncs' && password === 'ctrlzaid26') {
+            document.cookie = "rfrncs_auth=true; path=/; max-age=86400";
+            router.push('/');
+            return;
+        }
+
+        // 3. Failure
+        alert('Access Denied');
     }
 
     return (
@@ -24,8 +33,14 @@ export default function LoginPage() {
             <div className="flex flex-col gap-4 w-[300px]">
                 <h1 className="text-2xl font-bold text-white text-center">RFRNCS OS</h1>
                 <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+                <Input
                     type="password"
-                    placeholder="Enter Master Password"
+                    placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />

@@ -28,7 +28,7 @@ const contributors: Contributor[] = [
     },
     {
         id: "2",
-        name: "RFRNCS Head",
+        name: "Zaid",
         role: "Director",
         avatar: "/avatars/02.png",
         status: "Busy",
@@ -37,8 +37,8 @@ const contributors: Contributor[] = [
     },
     {
         id: "3",
-        name: "Creative Lead",
-        role: "Design",
+        name: "Brenden",
+        role: "Design Lead",
         avatar: "/avatars/03.png",
         status: "Away",
         projects: 5,
