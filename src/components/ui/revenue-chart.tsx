@@ -1,18 +1,27 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
+import React from "react";
+import {
+    Bar,
+    BarChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
+} from "recharts";
+import { cn } from "@/lib/utils";
 
-const data = [
-    { name: "Jan", total: 150000 },
-    { name: "Feb", total: 230000 },
-    { name: "Mar", total: 450000 }, // Mock data for visual, or pass real data via props
-    { name: "Apr", total: 320000 },
-    { name: "May", total: 500000 },
-]
+interface RevenueChartProps {
+    data: {
+        name: string;
+        total: number;
+    }[];
+    className?: string;
+}
 
-export function RevenueChart() {
+export function RevenueChart({ data, className }: RevenueChartProps) {
     return (
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" className={cn("", className)}>
             <BarChart data={data}>
                 <XAxis
                     dataKey="name"
@@ -26,11 +35,29 @@ export function RevenueChart() {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `₹${value / 1000}k`}
+                    tickFormatter={(value) => `$${value}`}
                 />
                 <Tooltip
-                    cursor={{ fill: 'transparent' }}
-                    contentStyle={{ borderRadius: '8px', border: 'none', background: '#333', color: '#fff' }}
+                    cursor={{ fill: "transparent" }}
+                    content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                            return (
+                                <div className="rounded-lg border bg-background p-2 shadow-sm">
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="flex flex-col">
+                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                                                Revenue
+                                            </span>
+                                            <span className="font-bold text-muted-foreground">
+                                                ${payload[0].value}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return null;
+                    }}
                 />
                 <Bar
                     dataKey="total"
@@ -40,5 +67,5 @@ export function RevenueChart() {
                 />
             </BarChart>
         </ResponsiveContainer>
-    )
+    );
 }

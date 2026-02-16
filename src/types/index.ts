@@ -3,7 +3,7 @@ export interface Lead {
     companyName: string
     poc: string
     value: number
-    status: "Cold Lead" | "Hot Lead" | "Negotiation" | "Closed"
+    status: "Cold Lead" | "Hot Lead" | "Negotiation" | "Closed" | "Dead"
     source: "Apollo" | "Seamless" | "Website" | "Referral"
 }
 

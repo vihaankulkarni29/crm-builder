@@ -30,12 +30,16 @@ export const BackgroundCircles = ({
             </div>
 
             {/* Animated Circles */}
-            transition={{
-                duration: 20,
-                repeat: Infinity,
-                ease: "linear",
-            }}
-            className="absolute top-1/2 left-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-200 dark:border-neutral-800 opacity-60"
+            <motion.div
+                animate={{
+                    rotate: 360,
+                }}
+                transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear",
+                }}
+                className="absolute top-1/2 left-1/2 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-neutral-200 dark:border-neutral-800 opacity-60"
             />
             <motion.div
                 animate={{
