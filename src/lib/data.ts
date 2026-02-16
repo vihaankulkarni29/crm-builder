@@ -56,6 +56,17 @@ export async function getProjects(): Promise<Project[]> {
     }))
 }
 
+export async function getTeamMembers() {
+    const { data, error } = await supabase.from('team_members').select('*').order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching team members:', error)
+        return []
+    }
+
+    return data || []
+}
+
 export const leads: Lead[] = [
     {
         id: "1",

@@ -151,3 +151,72 @@ export async function convertLeadToProject(leadId: string, companyName: string) 
     revalidatePath('/leads')
     return { success: true, message: `Project created for ${companyName}` }
 }
+
+export async function importLeads(leads: any[]) {
+    if (!leads || leads.length === 0) {
+        return { success: false, message: 'No data found in CSV' }
+    }
+
+    const formattedLeads = leads.map(lead => {
+        // Map CSV headers to DB columns
+        // CSV: Name company, name of person, designation, contact, subject
+        // DB: company, contact_person, designation, phone, subject, email (optional/derived), status (default), value (default)
+
+        return {
+            company: lead['Name company'] || lead['company'] || 'Unknown Company',
+            contact_person: lead['name of person'] || lead['contact_person'] || 'Unknown Contact',
+            designation: lead['designation'] || '',
+            phone: lead['contact'] || lead['phone'] || '', // Mapping 'contact' to 'phone'
+            subject: lead['subject'] || '',
+            email: lead['email'] || '', // Try to find an email if it exists
+            status: 'Cold Lead',
+            value: 0, // Default value
+            source: 'CSV Import'
+        }
+    })
+
+    const { error, count } = await supabase
+        .from('leads')
+        .insert(formattedLeads)
+        .select()
+
+    if (error) {
+        console.error('Import Error:', error)
+        return { success: false, message: error.message }
+    }
+
+    revalidatePath('/leads')
+    return { success: true, count: formattedLeads.length }
+}
+
+export async function addTeamMember(formData: FormData) {
+    const name = formData.get('name') as string
+    const role = formData.get('role') as string
+    const status = formData.get('status') as string
+
+    if (!name || !role) {
+        return { error: 'Name and Role are required' }
+    }
+
+    // Assign a random avatar for now
+    const avatarId = Math.floor(Math.random() * 8) + 1
+    const avatar = `/avatars/0${avatarId}.png`
+
+    const { error } = await supabase
+        .from('team_members')
+        .insert([{
+            name,
+            role,
+            status,
+            efficiency: '99%', // Default optimistic efficiency
+            avatar
+        }])
+
+    if (error) {
+        console.error('Error adding team member:', error)
+        return { error: error.message }
+    }
+
+    revalidatePath('/team')
+    return { success: true }
+}

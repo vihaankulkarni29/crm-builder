@@ -16,37 +16,14 @@ interface Contributor {
     efficiency: string;
 }
 
-const contributors: Contributor[] = [
-    {
-        id: "1",
-        name: "Vihaan Kulkarni",
-        role: "System Architect",
-        avatar: "/avatars/01.png",
-        status: "Online",
-        projects: 12,
-        efficiency: "98%",
-    },
-    {
-        id: "2",
-        name: "Zaid",
-        role: "Director",
-        avatar: "/avatars/02.png",
-        status: "Busy",
-        projects: 8,
-        efficiency: "95%",
-    },
-    {
-        id: "3",
-        name: "Brenden",
-        role: "Design Lead",
-        avatar: "/avatars/03.png",
-        status: "Away",
-        projects: 5,
-        efficiency: "92%",
-    },
-];
+// Hardcoded data removed in favor of dynamic props
 
-export function ContributorsTable() {
+// ... (interfaces)
+
+export function ContributorsTable({ members = [] }: { members?: any[] }) {
+    // Fallback if no members yet
+    const displayMembers = members.length > 0 ? members : [];
+
     return (
         <div className="w-full overflow-hidden rounded-xl border bg-card/50 backdrop-blur-sm shadow-sm">
             <div className="flex items-center justify-between border-b p-4">
@@ -59,8 +36,13 @@ export function ContributorsTable() {
                 <div className="col-span-3 text-center">Active Projects</div>
                 <div className="col-span-3 text-right">Efficiency</div>
             </div>
-            <div className="divide-y">
-                {contributors.map((member, i) => (
+            <div className="divide-y min-h-[100px]">
+                {displayMembers.length === 0 && (
+                    <div className="flex items-center justify-center p-8 text-muted-foreground">
+                        No team members found. Add one to get started.
+                    </div>
+                )}
+                {displayMembers.map((member, i) => (
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -70,7 +52,7 @@ export function ContributorsTable() {
                     >
                         <div className="col-span-4 flex items-center gap-3">
                             <Avatar className="h-10 w-10 border-2 border-background">
-                                <AvatarImage src={member.avatar} />
+                                <AvatarImage src={member.avatar || "/avatars/01.png"} />
                                 <AvatarFallback>{member.name.slice(0, 2)}</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
@@ -91,7 +73,7 @@ export function ContributorsTable() {
                             </Badge>
                         </div>
                         <div className="col-span-3 text-center text-sm font-medium">
-                            {member.projects}
+                            {member.projects || 0}
                         </div>
                         <div className="col-span-3 text-right font-mono text-sm text-primary">
                             {member.efficiency}

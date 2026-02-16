@@ -1,5 +1,6 @@
 import { KanbanBoard } from "@/components/leads/KanbanBoard";
-import { AddLeadDialog } from "@/components/leads/AddLeadDialog"; // Import it
+import { AddLeadDialog } from "@/components/leads/AddLeadDialog";
+import { CSVImport } from "@/components/leads/CSVImport";
 import { getLeads } from "@/lib/data";
 
 export const revalidate = 0;
@@ -14,8 +15,10 @@ export default async function LeadsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Leads Pipeline</h1>
                     <p className="text-muted-foreground">Manage and track potential clients.</p>
                 </div>
-                {/* The New Button */}
-                <AddLeadDialog />
+                <div className="flex gap-2">
+                    <CSVImport />
+                    <AddLeadDialog />
+                </div>
             </div>
 
             {/* Kanban Board Container */}
