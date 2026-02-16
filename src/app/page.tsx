@@ -18,24 +18,12 @@ export default async function Dashboard() {
         .filter((i) => i.status === "Paid")
         .reduce((sum, i) => sum + Number(i.amount), 0);
 
-    // Group invoices by month
-    const revenueByMonth = invoices.reduce((acc, invoice) => {
-        if (invoice.status === "Paid") {
-            const date = new Date(invoice.date);
-            const month = date.toLocaleString('default', { month: 'short' }); // "Jan", "Feb"
-
-            const existing = acc.find(item => item.name === month);
-            if (existing) {
-                existing.total += Number(invoice.amount);
-            } else {
-                acc.push({ name: month, total: Number(invoice.amount) });
-            }
-        }
-        return acc;
-    }, [] as { name: string; total: number }[]);
-
-    // Sort months chronologically if needed, but for now assuming data order or simple usage.
-    // In a real app, you might want to ensure "Jan" comes before "Feb" regardless of data order.
+    // Prepare Chart Data (Final Sprint Protocol)
+    const chartData = [
+        { name: "Jan", total: invoices.filter(i => i.date.includes("-01-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
+        { name: "Feb", total: invoices.filter(i => i.date.includes("-02-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
+        { name: "Mar", total: invoices.filter(i => i.date.includes("-03-") && i.status === "Paid").reduce((sum, i) => sum + Number(i.amount), 0) },
+    ];
 
     return (
         <div className="relative min-h-screen overflow-hidden">
@@ -65,7 +53,7 @@ export default async function Dashboard() {
                     <div className="col-span-4 rounded-xl border bg-card/50 backdrop-blur-sm p-6 text-card-foreground shadow-sm">
                         <h3 className="font-semibold leading-none tracking-tight mb-4">Revenue Trajectory</h3>
                         <div className="h-[200px] w-full">
-                            <RevenueChart data={revenueByMonth} />
+                            <RevenueChart data={chartData} />
                         </div>
                     </div>
                 </div>
