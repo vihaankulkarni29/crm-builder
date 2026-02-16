@@ -1,28 +1,22 @@
-"use client";
+"use client"
 
-import React from "react";
-import {
-    Bar,
-    BarChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from "recharts";
-import { cn } from "@/lib/utils";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts"
 
-interface RevenueChartProps {
-    data: {
-        name: string;
-        total: number;
-    }[];
-    className?: string;
-}
+// We accept data as a prop so the Server Component can pass real DB data
+export function RevenueChart({ data }: { data: any[] }) {
+    // If no data, show a placeholder
+    if (!data || data.length === 0) {
+        return (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+                No revenue data yet. Add invoices to see the chart.
+            </div>
+        );
+    }
 
-export function RevenueChart({ data, className }: RevenueChartProps) {
     return (
-        <ResponsiveContainer width="100%" height="100%" className={cn("", className)}>
+        <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333" />
                 <XAxis
                     dataKey="name"
                     stroke="#888888"
@@ -35,29 +29,12 @@ export function RevenueChart({ data, className }: RevenueChartProps) {
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
+                    tickFormatter={(value) => `₹${value / 1000}k`}
                 />
                 <Tooltip
-                    cursor={{ fill: "transparent" }}
-                    content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                            return (
-                                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.70rem] uppercase text-muted-foreground">
-                                                Revenue
-                                            </span>
-                                            <span className="font-bold text-muted-foreground">
-                                                ${payload[0].value}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        }
-                        return null;
-                    }}
+                    cursor={{ fill: 'transparent' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', background: '#1a1a1a', color: '#fff' }}
+                    formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Revenue']}
                 />
                 <Bar
                     dataKey="total"
@@ -67,5 +44,5 @@ export function RevenueChart({ data, className }: RevenueChartProps) {
                 />
             </BarChart>
         </ResponsiveContainer>
-    );
+    )
 }
