@@ -36,8 +36,12 @@ export function AddInvoiceDialog() {
             toast.success("Invoice Saved", { description: "Transaction recorded." })
             setOpen(false)
         } else {
+            const errorMsg = result?.errors
+                ? Object.values(result.errors).flat().join(', ')
+                : result?.message || "Check amounts and client name."
+
             toast.error("Failed to Save", {
-                description: result?.message || "Check amounts and client name."
+                description: errorMsg
             })
             // DO NOT CLOSE DIALOG
         }

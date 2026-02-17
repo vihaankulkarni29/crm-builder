@@ -30,12 +30,17 @@ export function AddLeadDialog() {
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
         const result = await addLead(formData)
-        if (result?.errors) {
-            toast.error("Failed to add lead. Please check the form.")
-            return
+        
+        if (result?.message?.includes('successfully')) {
+            toast.success("Lead added to the pipeline")
+            setOpen(false)
+        } else {
+            const errorMsg = result?.errors 
+                ? Object.values(result.errors).flat().join(', ') 
+                : result?.message || "Failed to add lead"
+                
+            toast.error("Error", { description: errorMsg })
         }
-        setOpen(false)
-        toast.success("Lead added to the pipeline")
     }
 
     return (

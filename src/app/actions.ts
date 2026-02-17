@@ -5,9 +5,16 @@ import { revalidatePath } from 'next/cache'
 
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
 
+function parseCurrency(value: any) {
+    if (!value) return 0
+    // Remove non-numeric characters except dot and minus
+    const cleanValue = String(value).replace(/[^0-9.-]+/g, "")
+    const parsed = parseFloat(cleanValue)
+    return isNaN(parsed) ? 0 : parsed
+}
+
 export async function addLead(formData: FormData) {
-    const rawValue = formData.get('value')
-    const value = rawValue ? parseFloat(rawValue as string) : 0
+    const value = parseCurrency(formData.get('value'))
 
     const rawData = {
         company: formData.get('company'),
@@ -24,11 +31,10 @@ export async function addLead(formData: FormData) {
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
-    const { company, contact, email, source } = validation.data
-    // Value is already processed above, but let's use the validated one for consistency if needed, 
-    // though safeParse retains types. 
-    // Actually validation.data will contain the validated structure.
+    const { company, contact, email } = validation.data
 
+    // Default source if empty
+    const source = (validation.data.source) || 'Manual'
     const status = (formData.get('status') as string) || 'Cold Lead'
 
     const { error } = await supabase
@@ -52,8 +58,7 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
-    const rawAmount = formData.get('amount')
-    const amount = rawAmount ? parseFloat(rawAmount as string) : 0
+    const amount = parseCurrency(formData.get('amount'))
 
     const rawData = {
         clientName: formData.get('clientName'),

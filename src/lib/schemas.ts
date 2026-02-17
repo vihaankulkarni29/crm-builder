@@ -5,7 +5,7 @@ export const leadSchema = z.object({
     contact: z.string().min(2, "Contact name must be at least 2 characters"),
     email: z.string().email("Invalid email address").or(z.literal('')),
     value: z.number().min(0, "Value must be positive"),
-    source: z.string().min(1, "Source is required"),
+    source: z.string().optional().or(z.literal('')),
 })
 
 export const invoiceSchema = z.object({
