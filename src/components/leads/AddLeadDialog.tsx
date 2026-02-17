@@ -15,8 +15,14 @@ import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import { addLead } from "@/app/actions"
 import { useState } from "react"
-
 import { toast } from "sonner"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
 
 export function AddLeadDialog() {
     const [open, setOpen] = useState(false)
@@ -35,8 +41,8 @@ export function AddLeadDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" /> Add Lead
+                <Button className="w-full border-dashed" variant="outline">
+                    <Plus className="mr-2 h-4 w-4" /> Add Lead
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -70,6 +76,23 @@ export function AddLeadDialog() {
                             Value (₹)
                         </Label>
                         <Input id="value" name="value" type="number" className="col-span-3" required />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="status" className="text-right">
+                            Status
+                        </Label>
+                        <div className="col-span-3">
+                            <Select name="status" defaultValue="Cold Lead">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Cold Lead">Cold Lead</SelectItem>
+                                    <SelectItem value="Hot Lead">Hot Lead</SelectItem>
+                                    <SelectItem value="Negotiation">Negotiation</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="source" className="text-right">

@@ -21,7 +21,7 @@ export async function addLead(formData: FormData) {
     }
 
     const { company, contact, email, value, source } = validation.data
-    const status = 'Cold Lead'
+    const status = (formData.get('status') as string) || 'Cold Lead'
 
     const { error } = await supabase
         .from('leads')
@@ -121,15 +121,15 @@ export async function addProject(formData: FormData) {
     return { message: 'Project added successfully' }
 }
 
-export async function convertLeadToProject(leadId: string, companyName: string) {
+export async function convertLeadToProject(leadId: string, companyName: string, head: string, deadline: string) {
     // 1. Create the Project
     const { error: projectError } = await supabase
         .from('projects')
         .insert([{
             name: `${companyName} Campaign`, // Auto-naming
-            head: 'Unassigned',
+            head: head || 'Unassigned',
             status: 'Onboarding',
-            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // Default 7 days
+            deadline: deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
         }])
 
     if (projectError) {
@@ -150,6 +150,21 @@ export async function convertLeadToProject(leadId: string, companyName: string) 
     revalidatePath('/operations')
     revalidatePath('/leads')
     return { success: true, message: `Project created for ${companyName}` }
+}
+
+export async function deleteLead(leadId: string) {
+    const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', leadId)
+
+    if (error) {
+        console.error('Error deleting lead:', error)
+        return { success: false, message: 'Failed to delete lead' }
+    }
+
+    revalidatePath('/leads')
+    return { success: true, message: 'Lead deleted' }
 }
 
 export async function importLeads(leads: any[]) {
