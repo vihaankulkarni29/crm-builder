@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle } from "lucide-react"
+import { HelpDialog } from "@/components/ui/help-dialog"
 
 const sidebarItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -18,6 +19,7 @@ export function Sidebar() {
 
     return (
         <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
+            {/* ... header and nav ... */}
             <div className="flex h-16 items-center border-b px-6">
                 <span className="text-xl font-bold tracking-tight">RFRNCS OS</span>
             </div>
@@ -43,6 +45,12 @@ export function Sidebar() {
                     })}
                 </nav>
             </div>
+
+            {/* Help Section */}
+            <div className="p-4 mt-auto">
+                <HelpDialog />
+            </div>
+
             <div className="border-t p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
