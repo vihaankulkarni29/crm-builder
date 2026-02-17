@@ -13,6 +13,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // 2. Admin Access (For Server Actions ONLY)
 // If the Service Key is available (Server-side), use it. Otherwise fall back to Anon.
-export const supabaseAdmin = supabaseServiceKey
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : supabase
+export const supabaseAdmin = (() => {
+  if (!supabaseServiceKey) {
+    console.error("🚨 FATAL: SUPABASE_SERVICE_ROLE_KEY is missing. Admin operations will fail.")
+    // We return a broken client that logs errors instead of failing silently with 403s
+    return createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { 'x-debug-error': 'missing-service-role-key' } }
+    })
+  }
+
+  // Log to confirm verify loading (safe enough, only first 3 chars)
+  console.log("✅ Service Role Key loaded:", supabaseServiceKey.substring(0, 3) + "...")
+
+  return createClient(supabaseUrl, supabaseServiceKey)
+})()

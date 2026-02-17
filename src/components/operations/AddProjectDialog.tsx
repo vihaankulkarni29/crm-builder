@@ -30,9 +30,21 @@ export function AddProjectDialog() {
 
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
-        await addProject(formData)
-        setOpen(false)
-        toast.success("Project created successfully")
+        try {
+            // @ts-ignore
+            const result = await addProject(formData)
+
+            if (result?.message?.includes('successfully')) {
+                toast.success("Project Created", { description: "Syncing with Operations..." })
+                setOpen(false)
+            } else {
+                toast.error("Creation Failed", { description: "Check console for RLS/Auth errors." })
+                console.error("Server Error:", result)
+            }
+        } catch (e) {
+            toast.error("System Error", { description: "Network or Server crash." })
+            console.error(e)
+        }
     }
 
     return (
