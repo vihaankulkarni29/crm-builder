@@ -75,7 +75,7 @@ export function AddLeadDialog() {
                         <Label htmlFor="value" className="text-right">
                             Value (₹)
                         </Label>
-                        <Input id="value" name="value" type="number" className="col-span-3" required />
+                        <Input id="value" name="value" type="number" min="0" step="1" className="col-span-3" required />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="status" className="text-right">

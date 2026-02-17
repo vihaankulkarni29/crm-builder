@@ -6,21 +6,29 @@ import { revalidatePath } from 'next/cache'
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
 
 export async function addLead(formData: FormData) {
+    const rawValue = formData.get('value')
+    const value = rawValue ? parseFloat(rawValue as string) : 0
+
     const rawData = {
         company: formData.get('company'),
         contact: formData.get('contact'),
         email: formData.get('email'),
-        value: parseFloat(formData.get('value') as string),
+        value,
         source: formData.get('source'),
     }
 
     const validation = leadSchema.safeParse(rawData)
 
     if (!validation.success) {
+        console.error("Lead Validation Failed:", validation.error.flatten().fieldErrors)
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
-    const { company, contact, email, value, source } = validation.data
+    const { company, contact, email, source } = validation.data
+    // Value is already processed above, but let's use the validated one for consistency if needed, 
+    // though safeParse retains types. 
+    // Actually validation.data will contain the validated structure.
+
     const status = (formData.get('status') as string) || 'Cold Lead'
 
     const { error } = await supabase
@@ -29,7 +37,7 @@ export async function addLead(formData: FormData) {
             company,
             contact_person: contact,
             email,
-            value,
+            value: validation.data.value, // Use validated value
             status,
             source
         }])
@@ -44,26 +52,30 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
+    const rawAmount = formData.get('amount')
+    const amount = rawAmount ? parseFloat(rawAmount as string) : 0
+
     const rawData = {
         clientName: formData.get('clientName'),
-        amount: parseFloat(formData.get('amount') as string),
+        amount,
         status: formData.get('status'),
     }
 
     const validation = invoiceSchema.safeParse(rawData)
 
     if (!validation.success) {
+        console.error("Invoice Validation Failed:", validation.error.flatten().fieldErrors)
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
-    const { clientName, amount, status } = validation.data
+    const { clientName, status } = validation.data
     const date = new Date().toISOString()
 
     const { error } = await supabase
         .from('invoices')
         .insert([{
             client_name: clientName,
-            amount,
+            amount: validation.data.amount,
             status,
             date
         }])
