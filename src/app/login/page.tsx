@@ -3,70 +3,53 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { login } from './action'
 
 export default function LoginPage() {
-    const [username, setUsername] = useState('')
-    const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
+    // We can keep state for controlled inputs if needed, or remove if fully relying on form data. 
+    // Keeping simple state for now to not break existing pattern too much, or just rely on form.
 
-    // Task 2: Prefetch dashboard for instant load
+    // Actually, let's simplify and remove the controlled state if we are using formData, 
+    // but the verifying step showed existing state usage.
+    // Let's keep it simple: Just use the form.
+
     useEffect(() => {
         router.prefetch('/')
     }, [router])
 
-    const handleLogin = () => {
-        // Prevent double clicks
-        if (isLoading) return
+    const handleLoginWrapper = async (formData: FormData) => {
         setIsLoading(true)
-
-        // 30 Days in seconds
-        const thirtyDays = 2592000
-
-        const setAuthCookie = () => {
-            document.cookie = `rfrncs_auth=true; path=/; max-age=${thirtyDays}`
-            router.push('/')
+        const result = await login(formData)
+        if (result) {
+            alert(result)
+            setIsLoading(false)
         }
-
-        // 1. Master Password Check (Bypasses username)
-        if (password === 'rfrncs2026') {
-            setAuthCookie()
-            return
-        }
-
-        // 2. Specific User Check
-        if (username === 'zaidrfrncs' && password === 'ctrlzaid26') {
-            setAuthCookie()
-            return
-        }
-
-        // 3. Failure
-        alert('Access Denied')
-        setIsLoading(false)
     }
 
     return (
         <div className="flex h-screen w-full items-center justify-center bg-black">
-            <div className="flex flex-col gap-4 w-[300px]">
+            <form action={handleLoginWrapper} className="flex flex-col gap-4 w-[300px]">
                 <h1 className="text-2xl font-bold text-white text-center">RFRNCS OS</h1>
                 <Input
+                    name="username"
                     type="text"
                     placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     disabled={isLoading}
+                    required
                 />
                 <Input
+                    name="password"
                     type="password"
                     placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
+                    required
                 />
-                <Button onClick={handleLogin} disabled={isLoading}>
+                <Button type="submit" disabled={isLoading}>
                     {isLoading ? "Accessing..." : "Enter System"}
                 </Button>
-            </div>
+            </form>
         </div>
     )
 }
