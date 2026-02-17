@@ -9,6 +9,7 @@ const USERS: Record<string, string> = {
     'pratik': 'growth26',
     'ritwik': 'scale26',
     'vihaan': 'tech26',
+    'admin': 'rfrncs2026',
 }
 
 const MASTER_KEY = 'rfrncs2026'
