@@ -190,14 +190,14 @@ export async function importLeads(leads: any[]) {
         // DB: company, contact_person, designation, phone, subject, email (optional/derived), status (default), value (default)
 
         return {
-            company: lead['Name company'] || lead['company'] || 'Unknown Company',
-            contact_person: lead['name of person'] || lead['contact_person'] || 'Unknown Contact',
-            designation: lead['designation'] || '',
-            phone: lead['contact'] || lead['phone'] || '', // Mapping 'contact' to 'phone'
-            subject: lead['subject'] || '',
-            email: lead['email'] || '', // Try to find an email if it exists
+            company: lead['Name company'] || lead['Company'] || 'Unknown Company',
+            contact_person: lead['name of person'] || lead['Name'] || 'Unknown Contact',
+            designation: lead['designation'] || lead['Designation'] || '',
+            phone: lead['contact'] || lead['Contact'] || '',
+            subject: lead['subject'] || lead['Subject'] || '',
+            email: lead['email'] || lead['Email'] || '',
             status: 'Cold Lead',
-            value: 0, // Default value
+            value: 0,
             source: 'CSV Import'
         }
     })

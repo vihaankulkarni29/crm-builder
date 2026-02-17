@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import {
     Dialog,
     DialogContent,
@@ -27,9 +28,19 @@ export function AddInvoiceDialog() {
     const [open, setOpen] = useState(false)
 
     // @ts-ignore
+    // @ts-ignore
     async function handleSubmit(formData: FormData) {
-        await addInvoice(formData)
-        setOpen(false)
+        const result = await addInvoice(formData)
+
+        if (result?.message?.includes('successfully')) {
+            toast.success("Invoice Saved", { description: "Transaction recorded." })
+            setOpen(false)
+        } else {
+            toast.error("Failed to Save", {
+                description: result?.message || "Check amounts and client name."
+            })
+            // DO NOT CLOSE DIALOG
+        }
     }
 
     return (
