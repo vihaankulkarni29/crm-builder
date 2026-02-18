@@ -58,12 +58,17 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
+    console.log("📝 [Server Action] addInvoice called")
     const amount = parseCurrency(formData.get('amount'))
+    const clientName = formData.get('clientName')
+    const statusRaw = formData.get('status')
+
+    console.log("📝 [Server Action] Data:", { clientName, amount, statusRaw })
 
     const rawData = {
-        clientName: formData.get('clientName'),
+        clientName,
         amount,
-        status: formData.get('status'),
+        status: statusRaw || 'Pending', // Robust default
     }
 
     const validation = invoiceSchema.safeParse(rawData)

@@ -30,7 +30,9 @@ export function AddInvoiceDialog() {
     // @ts-ignore
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
+        console.log("🖱️ [Client] Submitting Invoice Form...")
         const result = await addInvoice(formData)
+        console.log("🖱️ [Client] Result:", result)
 
         if (result?.message?.includes('successfully')) {
             toast.success("Invoice Saved", { description: "Transaction recorded." })
