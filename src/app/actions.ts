@@ -287,3 +287,37 @@ export async function deleteInvoice(id: string) {
     revalidatePath('/finance')
     return { success: true, message: 'Invoice deleted' }
 }
+
+export async function addAgentTool(name: string, secret: string) {
+    // Mock "Secure Save" - In production, use Supabase Vault or Hash
+    const maskedSecret = `${secret.slice(0, 3)}...${secret.slice(-4)}`
+
+    const { error } = await supabase
+        .from('agent_tools')
+        .insert([{
+            name,
+            masked_secret: maskedSecret
+        }])
+
+    if (error) {
+        console.error('Error adding agent tool:', error)
+        return { success: false, message: 'Failed to add tool' }
+    }
+
+    revalidatePath('/tools')
+    return { success: true, message: 'Agent Tool Connected' }
+}
+
+export async function getAgentTools() {
+    const { data, error } = await supabase
+        .from('agent_tools')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        console.error('Error fetching agent tools:', error)
+        return []
+    }
+
+    return data
+}

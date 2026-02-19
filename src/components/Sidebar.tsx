@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle } from "lucide-react"
+import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot } from "lucide-react"
 import { HelpDialog } from "@/components/ui/help-dialog"
 
 const sidebarItems = [
@@ -12,6 +12,7 @@ const sidebarItems = [
     { href: "/operations", label: "Operations", icon: Briefcase },
     { href: "/finance", label: "Finance", icon: DollarSign },
     { href: "/team", label: "Team", icon: UserCircle },
+    { href: "/tools", label: "Agent Tools", icon: Bot },
 ]
 
 export function Sidebar() {
