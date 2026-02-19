@@ -258,3 +258,32 @@ export async function addTeamMember(formData: FormData) {
     revalidatePath('/team')
     return { success: true }
 }
+export async function updateInvoiceStatus(id: string, newStatus: string) {
+    const { error } = await supabase
+        .from('invoices')
+        .update({ status: newStatus })
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error updating invoice status:', error)
+        return { success: false, message: 'Failed to update status' }
+    }
+
+    revalidatePath('/finance')
+    return { success: true, message: 'Status updated' }
+}
+
+export async function deleteInvoice(id: string) {
+    const { error } = await supabase
+        .from('invoices')
+        .delete()
+        .eq('id', id)
+
+    if (error) {
+        console.error('Error deleting invoice:', error)
+        return { success: false, message: 'Failed to delete invoice' }
+    }
+
+    revalidatePath('/finance')
+    return { success: true, message: 'Invoice deleted' }
+}

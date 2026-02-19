@@ -11,11 +11,14 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { DollarSign, Clock, AlertCircle } from "lucide-react"
 import { AddInvoiceDialog } from "@/components/finance/AddInvoiceDialog"
+import { InvoiceActions } from "@/components/finance/InvoiceActions"
 
 export const revalidate = 0;
 
 export default async function FinancePage() {
     const invoices = await getInvoices()
+    // ... (rest of the component)
+
 
     // Calculate metrics
     const totalRevenue = invoices
@@ -92,12 +95,13 @@ export default async function FinancePage() {
                                 <TableHead>Status</TableHead>
                                 <TableHead>Date</TableHead>
                                 <TableHead className="text-right">Amount</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {invoices.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                                         No invoices found.
                                     </TableCell>
                                 </TableRow>
@@ -112,6 +116,9 @@ export default async function FinancePage() {
                                         </TableCell>
                                         <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
                                         <TableCell className="text-right">₹{transaction.amount.toLocaleString()}</TableCell>
+                                        <TableCell>
+                                            <InvoiceActions invoiceId={transaction.id} />
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             )}
