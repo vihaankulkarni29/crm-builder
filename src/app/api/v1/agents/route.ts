@@ -47,7 +47,7 @@ export async function POST(req: Request) {
             const { error } = await supabaseAdmin.from('leads').insert([validation.data])
             if (error) {
                 console.error("Agent DB Insert Error:", error)
-                return NextResponse.json({ error: 'Database rejected the data' }, { status: 502 })
+                return NextResponse.json({ error: 'Database rejected the data', details: error.message }, { status: 502 })
             }
 
             return NextResponse.json({ success: true, message: 'Lead injected securely' })

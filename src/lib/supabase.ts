@@ -17,4 +17,4 @@ if (!supabaseServiceKey) {
 }
 
 // User requested fallback in code block: `supabaseServiceKey || supabaseAnonKey`
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey)
+export const supabaseAdmin = createClient(supabaseUrl, (supabaseServiceKey || supabaseAnonKey).trim())
