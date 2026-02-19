@@ -16,12 +16,16 @@ function parseCurrency(value: any) {
 export async function addLead(formData: FormData) {
     const value = parseCurrency(formData.get('value'))
 
+    // Robust defaults
+    const source = (formData.get('source') as string) || 'Manual'
+    const email = (formData.get('email') as string) || ''
+
     const rawData = {
         company: formData.get('company'),
         contact: formData.get('contact'),
-        email: formData.get('email'),
+        email,
         value,
-        source: formData.get('source'),
+        source,
     }
 
     const validation = leadSchema.safeParse(rawData)
@@ -31,10 +35,9 @@ export async function addLead(formData: FormData) {
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
-    const { company, contact, email } = validation.data
+    const { company, contact } = validation.data
+    // email and source are already handled or validated
 
-    // Default source if empty
-    const source = (validation.data.source) || 'Manual'
     const status = (formData.get('status') as string) || 'Cold Lead'
 
     const { error } = await supabase
@@ -42,10 +45,10 @@ export async function addLead(formData: FormData) {
         .insert([{
             company,
             contact_person: contact,
-            email,
+            email: validation.data.email || '',
             value: validation.data.value, // Use validated value
             status,
-            source
+            source: validation.data.source || 'Manual'
         }])
 
     if (error) {
@@ -60,13 +63,13 @@ export async function addLead(formData: FormData) {
 export async function addInvoice(formData: FormData) {
     console.log("📝 [Server Action] addInvoice called")
     const amount = parseCurrency(formData.get('amount'))
-    const clientName = formData.get('clientName')
+    const clientNameInput = formData.get('clientName')
     const statusRaw = formData.get('status')
 
-    console.log("📝 [Server Action] Data:", { clientName, amount, statusRaw })
+    console.log("📝 [Server Action] Data:", { clientNameInput, amount, statusRaw })
 
     const rawData = {
-        clientName,
+        clientName: clientNameInput,
         amount,
         status: statusRaw || 'Pending', // Robust default
     }
@@ -78,6 +81,7 @@ export async function addInvoice(formData: FormData) {
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
+    // Fix: Destructure with unique names or just use validation.data directly
     const { clientName, status } = validation.data
     const date = new Date().toISOString()
 

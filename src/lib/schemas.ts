@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const leadSchema = z.object({
     company: z.string().min(2, "Company name must be at least 2 characters"),
     contact: z.string().min(2, "Contact name must be at least 2 characters"),
-    email: z.string().email("Invalid email address").or(z.literal('')),
+    email: z.string().email("Invalid email address").or(z.literal('')).optional(),
     value: z.number().min(0, "Value must be positive"),
     source: z.string().optional().or(z.literal('')),
 })
