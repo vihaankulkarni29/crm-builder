@@ -61,42 +61,39 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
-    console.log("📝 [Server Action] addInvoice called")
-    const amount = parseCurrency(formData.get('amount'))
-    const clientNameInput = formData.get('clientName')
-    const statusRaw = formData.get('status')
-
-    console.log("📝 [Server Action] Data:", { clientNameInput, amount, statusRaw })
+    // 1. Safe Number Parsing
+    const rawAmount = formData.get('amount')
+    // Remove non-numeric chars (e.g. "₹10,000" -> "10000")
+    const cleanAmount = String(rawAmount).replace(/[^0-9.]/g, '')
+    const amount = cleanAmount ? parseFloat(cleanAmount) : 0
 
     const rawData = {
-        clientName: clientNameInput,
-        amount,
-        status: statusRaw || 'Pending', // Robust default
+        clientName: formData.get('clientName'),
+        amount: amount,
+        status: formData.get('status')
     }
 
     const validation = invoiceSchema.safeParse(rawData)
 
     if (!validation.success) {
-        console.error("Invoice Validation Failed:", validation.error.flatten().fieldErrors)
         return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
     }
 
-    // Fix: Destructure with unique names or just use validation.data directly
     const { clientName, status } = validation.data
-    const date = new Date().toISOString()
 
+    // 2. Database Insert
     const { error } = await supabase
         .from('invoices')
         .insert([{
-            client_name: clientName,
-            amount: validation.data.amount,
-            status,
-            date
+            client_name: clientName, // Ensure this matches DB column
+            amount: amount,
+            status: status,
+            date: new Date().toISOString()
         }])
 
     if (error) {
-        console.error('Error adding invoice:', error)
-        return { message: 'Failed to add invoice' }
+        console.error('Supabase Error:', error)
+        return { message: error.message || 'Database Error' }
     }
 
     revalidatePath('/finance')

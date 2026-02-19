@@ -29,24 +29,21 @@ export function AddInvoiceDialog() {
 
     // @ts-ignore
     // @ts-ignore
+    // @ts-ignore
     async function handleSubmit(formData: FormData) {
-        console.log("🖱️ [Client] Submitting Invoice Form...")
         const result = await addInvoice(formData)
-        console.log("🖱️ [Client] Result:", result)
 
         if (result?.message?.includes('successfully')) {
             toast.success("Invoice Saved", { description: "Transaction recorded." })
             setOpen(false)
         } else {
-            console.error("Invoice Save Failed:", result)
+            console.error("Invoice Error:", result)
             const errorDetails = result?.errors
-                ? JSON.stringify(result.errors)
-                : result?.message || "Check input data"
+                ? Object.values(result.errors).flat().join(', ')
+                : result?.message || "Database Rejected Entry"
 
-            toast.error("Failed to Save", {
-                description: errorDetails
-            })
-            // DO NOT CLOSE DIALOG
+            toast.error("Failed to Save", { description: errorDetails })
+            // Dialog remains OPEN so user can fix data
         }
     }
 
