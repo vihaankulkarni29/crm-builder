@@ -321,3 +321,30 @@ export async function getAgentTools() {
 
     return data
 }
+
+export async function importProjects(projects: any[]) {
+    if (!projects || projects.length === 0) return { success: false, message: 'No data found in CSV' }
+
+    const formattedProjects = projects.map(p => {
+        // ⚠️ CSV MAPPING: Change the bracketed text to match exact CSV headers
+        return {
+            name: p['Project Name'] || p['Name'] || p['name'] || 'Unnamed Project',
+            head: p['Head'] || p['Project Head'] || p['head'] || 'Unassigned',
+            deadline: p['Deadline'] || p['deadline'] || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: p['Status'] || p['status'] || 'Onboarding'
+        }
+    })
+
+    const { error, count } = await supabase
+        .from('projects')
+        .insert(formattedProjects)
+        .select()
+
+    if (error) {
+        console.error('Operations Import Error:', error)
+        return { success: false, message: error.message }
+    }
+
+    revalidatePath('/operations')
+    return { success: true, count: formattedProjects.length }
+}
