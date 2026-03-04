@@ -64,6 +64,12 @@ export function MobileLeadList({ leads }: { leads: Lead[] }) {
                             <span className="font-mono">₹{lead.value?.toLocaleString() || '0'}</span>
                         </div>
 
+                        {lead.assigned_to && lead.assigned_to !== 'Unassigned' && (
+                            <Badge variant="outline" className="text-xs w-fit">
+                                {lead.assigned_to}
+                            </Badge>
+                        )}
+
                         <div className="flex items-center gap-2 mt-1">
                             <label className="text-xs text-muted-foreground">Status:</label>
                             <select

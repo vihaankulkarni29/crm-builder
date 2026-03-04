@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { addLead } from "@/app/actions"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -24,24 +24,32 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
+const teamMembers = ['Unassigned', 'Zaid', 'Brenden', 'Pratik', 'Vihaan', 'New Agent 1', 'New Agent 2']
+
 export function AddLeadDialog() {
     const [open, setOpen] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
-        const result = await addLead(formData)
+        setIsSubmitting(true)
+        try {
+            const result = await addLead(formData)
 
-        if (result?.message?.includes('successfully')) {
-            toast.success("Lead added to the pipeline")
-            setOpen(false)
-        } else {
-            console.error("Lead Add Failed:", result)
-            const errorDetails = result?.errors
-                ? JSON.stringify(result.errors)
-                : result?.message || "Failed to add lead"
+            if (result?.message?.includes('successfully')) {
+                toast.success("Lead added to the pipeline")
+                setOpen(false)
+            } else {
+                console.error("Lead Add Failed:", result)
+                const errorDetails = result?.errors
+                    ? JSON.stringify(result.errors)
+                    : result?.message || "Failed to add lead"
 
-            toast.error("Error", { description: errorDetails })
-            // DO NOT CLOSE DIALOG
+                toast.error("Error", { description: errorDetails })
+                // DO NOT CLOSE DIALOG
+            }
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -107,11 +115,32 @@ export function AddLeadDialog() {
                         </Label>
                         <Input id="source" name="source" placeholder="Apollo, Manual..." className="col-span-3" />
                     </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="assigned_to" className="text-right">
+                            Assign To
+                        </Label>
+                        <div className="col-span-3">
+                            <Select name="assigned_to" defaultValue="Unassigned">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Assign to..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {teamMembers.map(member => (
+                                        <SelectItem key={member} value={member}>{member}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
                     <DialogFooter>
-                        <Button type="submit">Save Lead</Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                            Save Lead
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
         </Dialog>
     )
 }
+

@@ -181,6 +181,11 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
                                                                 <div className="text-sm font-medium">
                                                                     Est. Value: ₹{lead.value.toLocaleString()}
                                                                 </div>
+                                                                {lead.assigned_to && lead.assigned_to !== 'Unassigned' && (
+                                                                    <Badge variant="outline" className="mt-2 text-xs w-fit">
+                                                                        {lead.assigned_to}
+                                                                    </Badge>
+                                                                )}
                                                             </CardContent>
                                                         </Card>
                                                     )}

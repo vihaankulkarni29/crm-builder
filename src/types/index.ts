@@ -5,6 +5,7 @@ export interface Lead {
     value: number
     status: "Cold Lead" | "Hot Lead" | "Negotiation" | "Closed" | "Dead"
     source: "Apollo" | "Seamless" | "Website" | "Referral"
+    assigned_to?: string
 }
 
 export interface Project {
@@ -16,6 +17,7 @@ export interface Project {
     }
     status: "On Track" | "Delayed" | "Completed"
     deadline: string // ISO date string
+    assigned_to?: string
 }
 
 export interface Invoice {
