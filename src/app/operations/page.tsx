@@ -27,11 +27,15 @@ export default async function OperationsPage() {
                     </TabsList>
                 </div>
                 <TabsContent value="all">
-                    <ProjectTable projects={projects} />
+                    <div className="w-full overflow-x-auto">
+                        <ProjectTable projects={projects} />
+                    </div>
                 </TabsContent>
                 <TabsContent value="my">
                     {/* Mocking "My Projects" filter by showing a subset or empty state */}
-                    <ProjectTable projects={projects.filter(p => p.head.name === "Alice")} />
+                    <div className="w-full overflow-x-auto">
+                        <ProjectTable projects={projects.filter(p => p.head.name === "Alice")} />
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>

@@ -88,42 +88,44 @@ export default async function FinancePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Client Name</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Date</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                                <TableHead className="w-[50px]"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {invoices.length === 0 ? (
+                    <div className="w-full overflow-x-auto rounded-md border">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                                        No invoices found.
-                                    </TableCell>
+                                    <TableHead className="whitespace-nowrap">Client Name</TableHead>
+                                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                                    <TableHead className="whitespace-nowrap">Date</TableHead>
+                                    <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
+                                    <TableHead className="w-[50px]"></TableHead>
                                 </TableRow>
-                            ) : (
-                                invoices.map((transaction) => (
-                                    <TableRow key={transaction.id}>
-                                        <TableCell className="font-medium">{transaction.clientName}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={transaction.status === "Paid" ? "default" : transaction.status === "Overdue" ? "destructive" : "secondary"}>
-                                                {transaction.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                                        <TableCell className="text-right">₹{transaction.amount.toLocaleString()}</TableCell>
-                                        <TableCell>
-                                            <InvoiceActions invoiceId={transaction.id} />
+                            </TableHeader>
+                            <TableBody>
+                                {invoices.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground">
+                                            No invoices found.
                                         </TableCell>
                                     </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
+                                ) : (
+                                    invoices.map((transaction) => (
+                                        <TableRow key={transaction.id}>
+                                            <TableCell className="font-medium whitespace-nowrap">{transaction.clientName}</TableCell>
+                                            <TableCell className="whitespace-nowrap">
+                                                <Badge variant={transaction.status === "Paid" ? "default" : transaction.status === "Overdue" ? "destructive" : "secondary"}>
+                                                    {transaction.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="whitespace-nowrap">{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                                            <TableCell className="text-right whitespace-nowrap">₹{transaction.amount.toLocaleString()}</TableCell>
+                                            <TableCell>
+                                                <InvoiceActions invoiceId={transaction.id} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>
