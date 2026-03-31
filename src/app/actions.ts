@@ -6,6 +6,8 @@ import { auth } from '@/auth'
 import { leadSchema, invoiceSchema, projectSchema, teamMemberSchema, statusUpdateSchema, agentToolSchema } from '@/lib/schemas'
 import bcrypt from 'bcryptjs'
 import { sendCredentialsEmail } from './actions/email'
+import { logActivity } from '@/lib/audit'
+import { PROJECT_WORKFLOW } from '@/lib/workflow'
 
 function parseCurrency(value: any) {
     if (!value) return 0
@@ -103,6 +105,10 @@ export async function updateLeadStatus(id: string, newStatus: string) {
         } else {
             await db`UPDATE leads SET status = ${validation.data.status} WHERE id = ${id} AND assigned_to = ${session.user?.name || ''}`
         }
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'UPDATE_LEAD_STATUS', id, { newStatus: validation.data.status })
+        }
     } catch (error) {
         console.error('Error updating status:', error)
     }
@@ -171,6 +177,9 @@ export async function deleteLead(leadId: string) {
 
     try {
         await db`DELETE FROM leads WHERE id = ${leadId}`
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'DELETE_LEAD', leadId)
+        }
     } catch (error) {
         console.error('Error deleting lead:', error)
         return { success: false, message: 'Failed to delete lead' }
@@ -252,6 +261,10 @@ export async function addTeamMember(formData: FormData) {
                  
         if (email) {
             await sendCredentialsEmail(email, tempPassword)
+        }
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'TEAM_INVITE', 'NEW_HIRE', { email, role, hireName: name })
         }
     } catch (error: any) {
         console.error('Error adding team member:', error)
@@ -364,4 +377,50 @@ export async function importProjects(projects: any[]) {
 
     revalidatePath('/operations')
     return { success: true, count: formattedProjects.length }
+}
+
+export async function updateProjectStatus(id: string, newStatus: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    const validation = statusUpdateSchema.safeParse({ status: newStatus })
+    if (!validation.success) {
+        return { success: false, message: 'Bad Request' }
+    }
+
+    try {
+        let currentProjectRes
+        if (session.user?.role === 'Admin' || session.user?.role === 'Ops Head') {
+            currentProjectRes = await db`SELECT status FROM projects WHERE id = ${id}`
+        } else {
+            currentProjectRes = await db`SELECT status FROM projects WHERE id = ${id} AND head = ${session.user?.name || ''}`
+        }
+
+        if (currentProjectRes.length === 0) {
+            return { success: false, message: 'Project not found or Unauthorized' }
+        }
+
+        const currentStatus = currentProjectRes[0].status
+        
+        const validTransitions = PROJECT_WORKFLOW[currentStatus] || []
+        if (!validTransitions.includes(validation.data.status)) {
+            throw new Error(`Invalid Transition: Cannot move from ${currentStatus} to ${validation.data.status}`)
+        }
+
+        await db`UPDATE projects SET status = ${validation.data.status} WHERE id = ${id}`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'UPDATE_PROJECT_STATUS', id, { 
+                oldStatus: currentStatus, 
+                newStatus: validation.data.status 
+            })
+        }
+        
+    } catch (error: any) {
+        console.error('Error updating project status:', error)
+        return { success: false, message: error.message || 'Failed to update project status' }
+    }
+
+    revalidatePath('/operations')
+    return { success: true }
 }
