@@ -1,21 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 import dotenv from 'dotenv';
 
 // Point strictly to the staging environment file
 dotenv.config({ path: '.env.staging' });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const db = createClient(supabaseUrl, supabaseKey);
+const db = neon(process.env.DATABASE_URL!);
 
 async function runTest() {
     console.log("🧪 Sandbox initialized. Connected to STAGING database.");
 
-    // Experimental code goes here...
-    const { data, error } = await db.from('leads').select('*').limit(1);
-
-    if (error) console.error("Error:", error);
-    else console.log("Staging Connection Success. Found:", data);
+    try {
+        const data = await db`SELECT * FROM leads LIMIT 1`;
+        console.log("Staging Connection Success. Found:", data);
+    } catch (error) {
+        console.error("Error:", error);
+    }
 }
 
 runTest();

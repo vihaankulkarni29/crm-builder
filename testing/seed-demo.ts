@@ -1,12 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { neon } from '@neondatabase/serverless';
 import dotenv from 'dotenv';
 
 // Point strictly to the staging environment file
 dotenv.config({ path: '.env.staging' });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const db = createClient(supabaseUrl, supabaseKey);
+const db = neon(process.env.DATABASE_URL!);
 
 const teamMembers = [
     { name: 'Zaid', role: 'Creative Director', email: 'zaid@rfrncs.com' },
@@ -39,28 +37,31 @@ const demoLeads = [
 async function seedDemo() {
     console.log("🧹 Wiping staging data...");
 
-    // Clear existing data
-    const { error: delLeads } = await db.from('leads').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    if (delLeads) console.error("Failed to clear leads:", delLeads.message);
-    else console.log("  ✅ Leads cleared");
+    try {
+        await db`DELETE FROM leads`;
+        console.log("  ✅ Leads cleared");
+        await db`DELETE FROM team_members`;
+        console.log("  ✅ Team members cleared");
 
-    const { error: delTeam } = await db.from('team_members').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-    if (delTeam) console.error("Failed to clear team:", delTeam.message);
-    else console.log("  ✅ Team members cleared");
+        console.log("\n👥 Seeding team members...");
+        for (const tm of teamMembers) {
+            const avatarId = Math.floor(Math.random() * 8) + 1;
+            await db`INSERT INTO team_members (name, role, status, efficiency, avatar) 
+                     VALUES (${tm.name}, ${tm.role}, 'Online', '100%', ${'/avatars/0' + avatarId + '.png'})`;
+        }
+        console.log(`  ✅ ${teamMembers.length} team members inserted`);
 
-    // Seed Team Members
-    console.log("\n👥 Seeding team members...");
-    const { error: teamErr } = await db.from('team_members').insert(teamMembers);
-    if (teamErr) console.error("  ❌ Team seed failed:", teamErr.message);
-    else console.log(`  ✅ ${teamMembers.length} team members inserted`);
+        console.log("\n📊 Seeding demo leads...");
+        for (const lead of demoLeads) {
+            await db`INSERT INTO leads (company, contact_person, value, status, source, assigned_to) 
+                     VALUES (${lead.companyName}, ${lead.poc}, ${lead.value}, ${lead.status}, ${lead.source}, ${lead.assigned_to})`;
+        }
+        console.log(`  ✅ ${demoLeads.length} demo leads inserted`);
 
-    // Seed Leads
-    console.log("\n📊 Seeding demo leads...");
-    const { error: leadsErr } = await db.from('leads').insert(demoLeads);
-    if (leadsErr) console.error("  ❌ Leads seed failed:", leadsErr.message);
-    else console.log(`  ✅ ${demoLeads.length} demo leads inserted`);
-
-    console.log("\n🎯 Staging database seeded for demo!");
+        console.log("\n🎯 Staging database seeded for demo!");
+    } catch (error: any) {
+        console.error("❌ Seed failed:", error.message);
+    }
 }
 
 seedDemo();
