@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
-import { MobileNav } from "@/components/MobileNav";
+import { MobileNavSheet } from "@/components/MobileNavSheet";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -25,10 +25,12 @@ export default function RootLayout({
                 <div className="hidden md:flex">
                     <Sidebar />
                 </div>
-                <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8 pb-20 md:pb-8">
-                    {children}
-                </main>
-                <MobileNav />
+                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                    <MobileNavSheet />
+                    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
+                        {children}
+                    </main>
+                </div>
                 <Toaster theme="dark" position="top-right" />
             </body>
         </html>

@@ -2,6 +2,7 @@
 
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
+import { auth } from '@/auth'
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
 
 function parseCurrency(value: any) {
@@ -175,9 +176,15 @@ export async function importLeads(leads: any[]) {
 }
 
 export async function addTeamMember(formData: FormData) {
+    const session = await auth()
+    if (!session || (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head')) {
+        throw new Error("Unauthorized: Only Admin or Ops Head can provision new user access.")
+    }
+
     const name = formData.get('name') as string
     const role = formData.get('role') as string
     const status = formData.get('status') as string
+    const email = formData.get('email') as string || `${name.toLowerCase()}@rfrncs.com`
 
     if (!name || !role) {
         return { error: 'Name and Role are required' }
@@ -189,6 +196,9 @@ export async function addTeamMember(formData: FormData) {
     try {
         await db`INSERT INTO team_members (name, role, status, efficiency, avatar)
                  VALUES (${name}, ${role}, ${status}, ${'99%'}, ${avatar})`
+                 
+        await db`INSERT INTO users (name, email, role, image)
+                 VALUES (${name}, ${email}, ${role}, ${avatar})`
     } catch (error: any) {
         console.error('Error adding team member:', error)
         return { error: error.message }

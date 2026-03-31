@@ -58,3 +58,49 @@ CREATE TABLE IF NOT EXISTS agent_tools (
     masked_secret TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- ============================================
+-- AUTH.JS (NEXT-AUTH) TABLES
+-- ============================================
+
+-- A. Users Table (Core Identity)
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT,
+  email TEXT UNIQUE,
+  "emailVerified" TIMESTAMPTZ,
+  image TEXT,
+  role TEXT DEFAULT 'Member'
+);
+
+-- B. Accounts Table (OAuth Providers)
+CREATE TABLE IF NOT EXISTS accounts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  provider TEXT NOT NULL,
+  "providerAccountId" TEXT NOT NULL,
+  refresh_token TEXT,
+  access_token TEXT,
+  expires_at BIGINT,
+  id_token TEXT,
+  scope TEXT,
+  session_state TEXT,
+  token_type TEXT
+);
+
+-- C. Sessions Table (Database Sessions)
+CREATE TABLE IF NOT EXISTS sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "sessionToken" TEXT NOT NULL UNIQUE,
+  "userId" UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires TIMESTAMPTZ NOT NULL
+);
+
+-- D. Verification Tokens Table (Magic Links)
+CREATE TABLE IF NOT EXISTS verification_tokens (
+  identifier TEXT NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  expires TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (identifier, token)
+);
