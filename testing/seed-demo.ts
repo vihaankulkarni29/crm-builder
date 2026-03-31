@@ -10,7 +10,7 @@ const teamMembers = [
     { name: 'Zaid', role: 'Creative Director', email: 'zaid@rfrncs.com' },
     { name: 'Brenden', role: 'Head of Production', email: 'brenden@rfrncs.com' },
     { name: 'Pratik', role: 'Lead Developer', email: 'pratik@rfrncs.com' },
-    { name: 'Vihaan', role: 'Founder & CEO', email: 'vihaan@rfrncs.com' },
+    { name: 'Vihaan', role: 'Automation Expert', email: 'vihaan@rfrncs.com' },
     { name: 'Aarav', role: 'New Hire - Business Dev', email: 'aarav@rfrncs.com' },
 ];
 
