@@ -3,7 +3,7 @@
 import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
-import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
+import { leadSchema, invoiceSchema, projectSchema, teamMemberSchema, statusUpdateSchema, agentToolSchema } from '@/lib/schemas'
 import bcrypt from 'bcryptjs'
 import { sendCredentialsEmail } from './actions/email'
 
@@ -15,6 +15,9 @@ function parseCurrency(value: any) {
 }
 
 export async function addLead(formData: FormData) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
     const value = parseCurrency(formData.get('value'))
     const source = (formData.get('source') as string) || 'Manual'
     const email = (formData.get('email') as string) || ''
@@ -31,7 +34,7 @@ export async function addLead(formData: FormData) {
 
     if (!validation.success) {
         console.error("Lead Validation Failed:", validation.error.flatten().fieldErrors)
-        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
+        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors, error: 'Bad Request' }
     }
 
     const { company, contact } = validation.data
@@ -51,6 +54,10 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
     const rawAmount = formData.get('amount')
     const cleanAmount = String(rawAmount).replace(/[^0-9.]/g, '')
     const amount = cleanAmount ? parseFloat(cleanAmount) : 0
@@ -64,7 +71,7 @@ export async function addInvoice(formData: FormData) {
     const validation = invoiceSchema.safeParse(rawData)
 
     if (!validation.success) {
-        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
+        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors, error: 'Bad Request' }
     }
 
     const { clientName, status } = validation.data
@@ -82,15 +89,31 @@ export async function addInvoice(formData: FormData) {
 }
 
 export async function updateLeadStatus(id: string, newStatus: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    const validation = statusUpdateSchema.safeParse({ status: newStatus })
+    if (!validation.success) {
+        return { success: false, message: 'Bad Request' }
+    }
+
     try {
-        await db`UPDATE leads SET status = ${newStatus} WHERE id = ${id}`
+        if (session.user?.role === 'Admin' || session.user?.role === 'Ops Head') {
+            await db`UPDATE leads SET status = ${validation.data.status} WHERE id = ${id}`
+        } else {
+            await db`UPDATE leads SET status = ${validation.data.status} WHERE id = ${id} AND assigned_to = ${session.user?.name || ''}`
+        }
     } catch (error) {
         console.error('Error updating status:', error)
     }
     revalidatePath('/leads')
+    return { success: true }
 }
 
 export async function addProject(formData: FormData) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
     const rawData = {
         name: formData.get('name'),
         head: formData.get('head'),
@@ -100,7 +123,7 @@ export async function addProject(formData: FormData) {
     const validation = projectSchema.safeParse(rawData)
 
     if (!validation.success) {
-        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors }
+        return { message: 'Validation Error', errors: validation.error.flatten().fieldErrors, error: 'Bad Request' }
     }
 
     const { name, head, deadline } = validation.data
@@ -119,11 +142,18 @@ export async function addProject(formData: FormData) {
 }
 
 export async function convertLeadToProject(leadId: string, companyName: string, head?: string, deadline?: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
     try {
         await db`INSERT INTO projects (name, head, status, deadline)
                  VALUES (${companyName + ' Campaign'}, ${head || 'Unassigned'}, ${'Onboarding'}, ${deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()})`
 
-        await db`UPDATE leads SET status = 'Closed' WHERE id = ${leadId}`
+        if (session.user?.role === 'Admin' || session.user?.role === 'Ops Head') {
+            await db`UPDATE leads SET status = 'Closed' WHERE id = ${leadId}`
+        } else {
+            await db`UPDATE leads SET status = 'Closed' WHERE id = ${leadId} AND assigned_to = ${session.user?.name || ''}`
+        }
     } catch (error) {
         console.error('Error converting lead:', error)
         return { success: false, message: 'Failed to create project' }
@@ -135,6 +165,10 @@ export async function convertLeadToProject(leadId: string, companyName: string, 
 }
 
 export async function deleteLead(leadId: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
     try {
         await db`DELETE FROM leads WHERE id = ${leadId}`
     } catch (error) {
@@ -147,6 +181,10 @@ export async function deleteLead(leadId: string) {
 }
 
 export async function importLeads(leads: any[]) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
     if (!leads || leads.length === 0) {
         return { success: false, message: 'No data found in CSV' }
     }
@@ -179,18 +217,25 @@ export async function importLeads(leads: any[]) {
 
 export async function addTeamMember(formData: FormData) {
     const session = await auth()
-    if (!session || (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head')) {
-        throw new Error("Unauthorized: Only Admin or Ops Head can provision new user access.")
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') {
+        throw new Error("Forbidden")
     }
 
-    const name = formData.get('name') as string
-    const role = formData.get('role') as string
-    const status = formData.get('status') as string
-    const email = formData.get('email') as string || `${name.toLowerCase()}@rfrncs.com`
-
-    if (!name || !role) {
-        return { error: 'Name and Role are required' }
+    const rawData = {
+        name: formData.get('name') as string,
+        role: formData.get('role') as string,
+        email: formData.get('email') as string || `${(formData.get('name') as string || '').toLowerCase()}@rfrncs.com`,
+        status: formData.get('status') as string || 'Online'
     }
+
+    const validation = teamMemberSchema.safeParse(rawData)
+
+    if (!validation.success) {
+        return { error: 'Bad Request', fieldErrors: validation.error.flatten().fieldErrors }
+    }
+
+    const { name, role, status, email } = validation.data
 
     const avatarId = Math.floor(Math.random() * 8) + 1
     const avatar = `/avatars/0${avatarId}.png`
@@ -200,12 +245,14 @@ export async function addTeamMember(formData: FormData) {
 
     try {
         await db`INSERT INTO team_members (name, role, status, efficiency, avatar)
-                 VALUES (${name}, ${role}, ${status}, ${'99%'}, ${avatar})`
+                 VALUES (${name}, ${role}, ${status || 'Online'}, ${'99%'}, ${avatar})`
                  
         await db`INSERT INTO users (name, email, role, image, password_hash)
                  VALUES (${name}, ${email}, ${role}, ${avatar}, ${passwordHash})`
                  
-        await sendCredentialsEmail(email, tempPassword)
+        if (email) {
+            await sendCredentialsEmail(email, tempPassword)
+        }
     } catch (error: any) {
         console.error('Error adding team member:', error)
         return { error: error.message }
@@ -216,8 +263,17 @@ export async function addTeamMember(formData: FormData) {
 }
 
 export async function updateInvoiceStatus(id: string, newStatus: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
+    const validation = statusUpdateSchema.safeParse({ status: newStatus })
+    if (!validation.success) {
+        return { success: false, message: 'Bad Request' }
+    }
+
     try {
-        await db`UPDATE invoices SET status = ${newStatus} WHERE id = ${id}`
+        await db`UPDATE invoices SET status = ${validation.data.status} WHERE id = ${id}`
     } catch (error) {
         console.error('Error updating invoice status:', error)
         return { success: false, message: 'Failed to update status' }
@@ -228,6 +284,10 @@ export async function updateInvoiceStatus(id: string, newStatus: string) {
 }
 
 export async function deleteInvoice(id: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
     try {
         await db`DELETE FROM invoices WHERE id = ${id}`
     } catch (error) {
@@ -240,11 +300,22 @@ export async function deleteInvoice(id: string) {
 }
 
 export async function addAgentTool(name: string, secret: string) {
-    const maskedSecret = `${secret.slice(0, 3)}...${secret.slice(-4)}`
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
+    const validation = agentToolSchema.safeParse({ name, secret })
+    if (!validation.success) {
+        return { success: false, message: 'Bad Request' }
+    }
+
+    const validName = validation.data.name
+    const validSecret = validation.data.secret
+    const maskedSecret = `${validSecret.slice(0, 3)}...${validSecret.slice(-4)}`
 
     try {
         await db`INSERT INTO agent_tools (name, masked_secret)
-                 VALUES (${name}, ${maskedSecret})`
+                 VALUES (${validName}, ${maskedSecret})`
     } catch (error) {
         console.error('Error adding agent tool:', error)
         return { success: false, message: 'Failed to add tool' }
@@ -255,6 +326,9 @@ export async function addAgentTool(name: string, secret: string) {
 }
 
 export async function getAgentTools() {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
     try {
         const data = await db`SELECT * FROM agent_tools ORDER BY created_at DESC`
         return data || []
@@ -265,6 +339,10 @@ export async function getAgentTools() {
 }
 
 export async function importProjects(projects: any[]) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+    if (session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head') throw new Error('Forbidden')
+
     if (!projects || projects.length === 0) return { success: false, message: 'No data found in CSV' }
 
     const formattedProjects = projects.map(p => ({

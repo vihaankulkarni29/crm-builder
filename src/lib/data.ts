@@ -1,9 +1,20 @@
 import { Lead, Project, Invoice } from "@/types"
 import { db } from "@/lib/db"
+import { auth } from "@/auth"
 
 export async function getLeads(): Promise<Lead[]> {
     try {
-        const data = await db`SELECT * FROM leads ORDER BY created_at DESC`
+        const session = await auth()
+        if (!session) return []
+
+        const isMember = session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head'
+        let data
+
+        if (isMember && session.user?.name) {
+            data = await db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} ORDER BY created_at DESC`
+        } else {
+            data = await db`SELECT * FROM leads ORDER BY created_at DESC`
+        }
 
         return (data || []).map((lead: any) => ({
             id: lead.id,
@@ -39,7 +50,17 @@ export async function getInvoices(): Promise<Invoice[]> {
 
 export async function getProjects(): Promise<Project[]> {
     try {
-        const data = await db`SELECT * FROM projects ORDER BY deadline ASC`
+        const session = await auth()
+        if (!session) return []
+
+        const isMember = session.user?.role !== 'Admin' && session.user?.role !== 'Ops Head'
+        let data
+
+        if (isMember && session.user?.name) {
+            data = await db`SELECT * FROM projects WHERE head = ${session.user.name} ORDER BY deadline ASC`
+        } else {
+            data = await db`SELECT * FROM projects ORDER BY deadline ASC`
+        }
 
         return (data || []).map((project: any) => ({
             id: project.id,

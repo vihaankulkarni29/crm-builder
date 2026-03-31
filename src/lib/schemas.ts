@@ -21,3 +21,19 @@ export const projectSchema = z.object({
         message: "Invalid date format",
     }),
 })
+
+export const teamMemberSchema = z.object({
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    role: z.string().min(2, "Role is required"),
+    email: z.string().email("Invalid email address").optional().or(z.literal('')),
+    status: z.enum(["Online", "Offline", "Away", "Do Not Disturb"]).optional(),
+})
+
+export const statusUpdateSchema = z.object({
+    status: z.string().min(1, "Status string required")
+})
+
+export const agentToolSchema = z.object({
+    name: z.string().min(2, "Agent Tool name required"),
+    secret: z.string().min(8, "Secure secret keys must be at least 8 characters")
+})
