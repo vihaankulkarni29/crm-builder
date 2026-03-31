@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT UNIQUE,
   "emailVerified" TIMESTAMPTZ,
   image TEXT,
-  role TEXT DEFAULT 'Member'
+  role TEXT DEFAULT 'Member',
+  password_hash TEXT
 );
 
 -- B. Accounts Table (OAuth Providers)

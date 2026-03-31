@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
+import bcrypt from 'bcryptjs'
+import { sendCredentialsEmail } from './actions/email'
 
 function parseCurrency(value: any) {
     if (!value) return 0
@@ -193,12 +195,17 @@ export async function addTeamMember(formData: FormData) {
     const avatarId = Math.floor(Math.random() * 8) + 1
     const avatar = `/avatars/0${avatarId}.png`
 
+    const tempPassword = Math.random().toString(36).slice(-8)
+    const passwordHash = await bcrypt.hash(tempPassword, 10)
+
     try {
         await db`INSERT INTO team_members (name, role, status, efficiency, avatar)
                  VALUES (${name}, ${role}, ${status}, ${'99%'}, ${avatar})`
                  
-        await db`INSERT INTO users (name, email, role, image)
-                 VALUES (${name}, ${email}, ${role}, ${avatar})`
+        await db`INSERT INTO users (name, email, role, image, password_hash)
+                 VALUES (${name}, ${email}, ${role}, ${avatar}, ${passwordHash})`
+                 
+        await sendCredentialsEmail(email, tempPassword)
     } catch (error: any) {
         console.error('Error adding team member:', error)
         return { error: error.message }

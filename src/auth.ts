@@ -1,5 +1,7 @@
 import NextAuth from "next-auth"
 import Nodemailer from "next-auth/providers/nodemailer"
+import Credentials from "next-auth/providers/credentials"
+import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 
 function NeonAdapter(): any {
@@ -114,16 +116,47 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     adapter: NeonAdapter(),
     providers: [
         Nodemailer({
-            server: process.env.EMAIL_SERVER,
-            from: process.env.EMAIL_FROM,
+            server: process.env.EMAIL_SERVER || "smtp://fallback:2525",
+            from: process.env.EMAIL_FROM || "onboarding@resend.dev",
         }),
+        Credentials({
+            name: "Credentials",
+            credentials: {
+                email: { label: "Email", type: "email" },
+                password: { label: "Password", type: "password" }
+            },
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) return null
+                
+                const userRes = await db`SELECT * FROM users WHERE email = ${credentials.email as string}`
+                if (userRes.length === 0) return null
+                
+                const user = userRes[0]
+                if (!user.password_hash) return null
+                
+                const passwordsMatch = await bcrypt.compare(credentials.password as string, user.password_hash)
+                
+                if (passwordsMatch) {
+                    return user
+                }
+                
+                return null
+            }
+        })
     ],
+    session: { strategy: "jwt" },
     callbacks: {
-        async session({ session, user }: any) {
-            if (session.user) {
-                // Pass role and exact id to the extended session
-                session.user.role = user.role
-                session.user.id = user.id
+        async jwt({ token, user }: any) {
+            if (user) {
+                token.role = user.role
+                token.id = user.id
+            }
+            return token
+        },
+        async session({ session, token }: any) {
+            if (session.user && token) {
+                session.user.role = token.role as string
+                session.user.id = token.id as string
             }
             return session
         }
