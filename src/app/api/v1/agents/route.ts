@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { db } from '@/lib/db'
 import { z } from 'zod'
 
 // 1. Logical & SQL Security: Strict Schema definition
-// This prevents the AI from sending columns that don't exist, preventing SQL crashes.
 const agentLeadSchema = z.object({
     company: z.string().min(2, "Company name too short"),
     contact_person: z.string().default("Unknown (via Agent)"),
     email: z.string().email().optional().or(z.literal('')),
-    value: z.number().min(0).default(0), // Prevent negative values
+    value: z.number().min(0).default(0),
     source: z.string().default("AI Agent"),
     status: z.string().default("Cold Lead"),
     designation: z.string().optional(),
@@ -33,7 +32,7 @@ export async function POST(req: Request) {
         const { action, payload } = body
 
         if (action === 'ADD_LEAD') {
-            // 3. Payload Sanitization (The SQL Shield)
+            // 3. Payload Sanitization (The Zod Shield)
             const validation = agentLeadSchema.safeParse(payload)
 
             if (!validation.success) {
@@ -43,11 +42,14 @@ export async function POST(req: Request) {
                 }, { status: 400 })
             }
 
-            // 4. Safe Database Insert
-            const { error } = await supabaseAdmin.from('leads').insert([validation.data])
-            if (error) {
-                console.error("Agent DB Insert Error:", error)
-                return NextResponse.json({ error: 'Database rejected the data', details: error.message }, { status: 502 })
+            // 4. Safe Database Insert via Neon
+            const d = validation.data
+            try {
+                await db`INSERT INTO leads (company, contact_person, email, value, source, status, designation, phone)
+                         VALUES (${d.company}, ${d.contact_person}, ${d.email || ''}, ${d.value}, ${d.source}, ${d.status}, ${d.designation || ''}, ${d.phone || ''})`
+            } catch (dbError: any) {
+                console.error("Agent DB Insert Error:", dbError)
+                return NextResponse.json({ error: 'Database rejected the data', details: dbError.message }, { status: 502 })
             }
 
             return NextResponse.json({ success: true, message: 'Lead injected securely' })
@@ -55,7 +57,6 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ error: 'Unknown Action. Supported actions: ADD_LEAD' }, { status: 400 })
     } catch (e: any) {
-        // Catch malformed JSON
         return NextResponse.json({ error: 'Invalid Request Format' }, { status: 400 })
     }
 }

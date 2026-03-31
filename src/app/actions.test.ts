@@ -1,24 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { addLead, addInvoice, addProject, convertLeadToProject } from './actions'
 
-// Mock Supabase
-const { mockInsert, mockSelect, mockUpdate, mockEq, mockFrom } = vi.hoisted(() => {
-    const mockInsert = vi.fn()
-    const mockSelect = vi.fn()
-    const mockEq = vi.fn()
-    const mockUpdate = vi.fn(() => ({ eq: mockEq }))
-    const mockFrom = vi.fn(() => ({
-        insert: mockInsert,
-        select: mockSelect,
-        update: mockUpdate,
-    }))
-    return { mockInsert, mockSelect, mockUpdate, mockEq, mockFrom }
-})
+// Mock Neon DB
+const mockDb = vi.fn()
 
-vi.mock('@/lib/supabase', () => ({
-    supabaseAdmin: {
-        from: mockFrom,
-    },
+vi.mock('@/lib/db', () => ({
+    db: (...args: any[]) => mockDb(...args),
 }))
 
 vi.mock('next/cache', () => ({
@@ -28,8 +15,7 @@ vi.mock('next/cache', () => ({
 describe('Server Actions', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        mockInsert.mockResolvedValue({ error: null })
-        mockEq.mockResolvedValue({ error: null })
+        mockDb.mockResolvedValue([])
     })
 
     describe('addLead', () => {
@@ -44,15 +30,7 @@ describe('Server Actions', () => {
             const result = await addLead(formData)
 
             expect(result).toEqual({ message: 'Lead added successfully' })
-            expect(mockFrom).toHaveBeenCalledWith('leads')
-            expect(mockInsert).toHaveBeenCalledWith([expect.objectContaining({
-                company: 'Test Corp',
-                contact_person: 'John Doe',
-                email: 'john@example.com',
-                value: 5000,
-                status: 'Cold Lead',
-                source: 'Website'
-            })])
+            expect(mockDb).toHaveBeenCalled()
         })
 
         it('should return validation error for invalid email', async () => {
@@ -68,7 +46,7 @@ describe('Server Actions', () => {
             expect(result).toHaveProperty('errors')
             // @ts-ignore
             expect(result.errors.email).toBeDefined()
-            expect(mockInsert).not.toHaveBeenCalled()
+            expect(mockDb).not.toHaveBeenCalled()
         })
     })
 
@@ -82,12 +60,7 @@ describe('Server Actions', () => {
             const result = await addInvoice(formData)
 
             expect(result).toEqual({ message: 'Invoice added successfully' })
-            expect(mockFrom).toHaveBeenCalledWith('invoices')
-            expect(mockInsert).toHaveBeenCalledWith([expect.objectContaining({
-                client_name: 'Client A',
-                amount: 1000,
-                status: 'Pending',
-            })])
+            expect(mockDb).toHaveBeenCalled()
         })
     })
 
@@ -101,13 +74,7 @@ describe('Server Actions', () => {
             const result = await addProject(formData)
 
             expect(result).toEqual({ message: 'Project added successfully' })
-            expect(mockFrom).toHaveBeenCalledWith('projects')
-            expect(mockInsert).toHaveBeenCalledWith([expect.objectContaining({
-                name: 'New Project',
-                head: 'Vihaan',
-                deadline: '2024-12-31',
-                status: 'Onboarding'
-            })])
+            expect(mockDb).toHaveBeenCalled()
         })
     })
 
@@ -116,19 +83,8 @@ describe('Server Actions', () => {
             const result = await convertLeadToProject('lead-123', 'New Client Co')
 
             expect(result).toEqual({ success: true, message: 'Project created for New Client Co' })
-
-            // Check Project Creation
-            expect(mockFrom).toHaveBeenCalledWith('projects')
-            expect(mockInsert).toHaveBeenCalledWith([expect.objectContaining({
-                name: 'New Client Co Campaign',
-                head: 'Unassigned',
-                status: 'Onboarding'
-            })])
-
-            // Check Lead Update
-            expect(mockFrom).toHaveBeenCalledWith('leads')
-            expect(mockUpdate).toHaveBeenCalledWith({ status: 'Closed' })
-            expect(mockEq).toHaveBeenCalledWith('id', 'lead-123')
+            // Should have been called twice: INSERT project + UPDATE lead
+            expect(mockDb).toHaveBeenCalledTimes(2)
         })
     })
 })

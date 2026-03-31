@@ -1,13 +1,11 @@
 'use server'
 
-import { supabaseAdmin as supabase } from '@/lib/supabase'
+import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
-
 import { leadSchema, invoiceSchema, projectSchema } from '@/lib/schemas'
 
 function parseCurrency(value: any) {
     if (!value) return 0
-    // Remove non-numeric characters except dot and minus
     const cleanValue = String(value).replace(/[^0-9.-]+/g, "")
     const parsed = parseFloat(cleanValue)
     return isNaN(parsed) ? 0 : parsed
@@ -15,8 +13,6 @@ function parseCurrency(value: any) {
 
 export async function addLead(formData: FormData) {
     const value = parseCurrency(formData.get('value'))
-
-    // Robust defaults
     const source = (formData.get('source') as string) || 'Manual'
     const email = (formData.get('email') as string) || ''
 
@@ -36,22 +32,13 @@ export async function addLead(formData: FormData) {
     }
 
     const { company, contact } = validation.data
-    // email and source are already handled or validated
-
     const status = (formData.get('status') as string) || 'Cold Lead'
+    const assigned_to = (formData.get('assigned_to') as string) || 'Unassigned'
 
-    const { error } = await supabase
-        .from('leads')
-        .insert([{
-            company,
-            contact_person: contact,
-            email: validation.data.email || '',
-            value: validation.data.value, // Use validated value
-            status,
-            source: validation.data.source || 'Manual'
-        }])
-
-    if (error) {
+    try {
+        await db`INSERT INTO leads (company, contact_person, email, value, status, source, assigned_to)
+                 VALUES (${company}, ${contact}, ${validation.data.email || ''}, ${validation.data.value}, ${status}, ${validation.data.source || 'Manual'}, ${assigned_to})`
+    } catch (error) {
         console.error('Error adding lead:', error)
         return { message: 'Failed to add lead' }
     }
@@ -61,9 +48,7 @@ export async function addLead(formData: FormData) {
 }
 
 export async function addInvoice(formData: FormData) {
-    // 1. Safe Number Parsing
     const rawAmount = formData.get('amount')
-    // Remove non-numeric chars (e.g. "₹10,000" -> "10000")
     const cleanAmount = String(rawAmount).replace(/[^0-9.]/g, '')
     const amount = cleanAmount ? parseFloat(cleanAmount) : 0
 
@@ -81,19 +66,12 @@ export async function addInvoice(formData: FormData) {
 
     const { clientName, status } = validation.data
 
-    // 2. Database Insert
-    const { error } = await supabase
-        .from('invoices')
-        .insert([{
-            client_name: clientName, // Ensure this matches DB column
-            amount: amount,
-            status: status,
-            date: new Date().toISOString()
-        }])
-
-    if (error) {
-        console.error('Supabase Error:', error)
-        return { message: error.message || 'Database Error' }
+    try {
+        await db`INSERT INTO invoices (client_name, amount, status, date)
+                 VALUES (${clientName}, ${amount}, ${status}, ${new Date().toISOString()})`
+    } catch (error) {
+        console.error('DB Error:', error)
+        return { message: 'Database Error' }
     }
 
     revalidatePath('/finance')
@@ -101,12 +79,11 @@ export async function addInvoice(formData: FormData) {
 }
 
 export async function updateLeadStatus(id: string, newStatus: string) {
-    const { error } = await supabase
-        .from('leads')
-        .update({ status: newStatus })
-        .eq('id', id)
-
-    if (error) console.error('Error updating status:', error)
+    try {
+        await db`UPDATE leads SET status = ${newStatus} WHERE id = ${id}`
+    } catch (error) {
+        console.error('Error updating status:', error)
+    }
     revalidatePath('/leads')
 }
 
@@ -126,16 +103,10 @@ export async function addProject(formData: FormData) {
     const { name, head, deadline } = validation.data
     const status = 'Onboarding'
 
-    const { error } = await supabase
-        .from('projects')
-        .insert([{
-            name,
-            head,
-            deadline,
-            status
-        }])
-
-    if (error) {
+    try {
+        await db`INSERT INTO projects (name, head, deadline, status)
+                 VALUES (${name}, ${head}, ${deadline}, ${status})`
+    } catch (error) {
         console.error('Error adding project:', error)
         return { message: 'Failed to add project' }
     }
@@ -144,30 +115,15 @@ export async function addProject(formData: FormData) {
     return { message: 'Project added successfully' }
 }
 
-export async function convertLeadToProject(leadId: string, companyName: string, head: string, deadline: string) {
-    // 1. Create the Project
-    const { error: projectError } = await supabase
-        .from('projects')
-        .insert([{
-            name: `${companyName} Campaign`, // Auto-naming
-            head: head || 'Unassigned',
-            status: 'Onboarding',
-            deadline: deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-        }])
+export async function convertLeadToProject(leadId: string, companyName: string, head?: string, deadline?: string) {
+    try {
+        await db`INSERT INTO projects (name, head, status, deadline)
+                 VALUES (${companyName + ' Campaign'}, ${head || 'Unassigned'}, ${'Onboarding'}, ${deadline || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()})`
 
-    if (projectError) {
-        console.error('Error creating project from lead:', projectError)
+        await db`UPDATE leads SET status = 'Closed' WHERE id = ${leadId}`
+    } catch (error) {
+        console.error('Error converting lead:', error)
         return { success: false, message: 'Failed to create project' }
-    }
-
-    // 2. Mark Lead as Closed (if not already)
-    const { error: leadError } = await supabase
-        .from('leads')
-        .update({ status: 'Closed' })
-        .eq('id', leadId)
-
-    if (leadError) {
-        console.error('Error updating lead status:', leadError)
     }
 
     revalidatePath('/operations')
@@ -176,12 +132,9 @@ export async function convertLeadToProject(leadId: string, companyName: string, 
 }
 
 export async function deleteLead(leadId: string) {
-    const { error } = await supabase
-        .from('leads')
-        .delete()
-        .eq('id', leadId)
-
-    if (error) {
+    try {
+        await db`DELETE FROM leads WHERE id = ${leadId}`
+    } catch (error) {
         console.error('Error deleting lead:', error)
         return { success: false, message: 'Failed to delete lead' }
     }
@@ -195,30 +148,24 @@ export async function importLeads(leads: any[]) {
         return { success: false, message: 'No data found in CSV' }
     }
 
-    const formattedLeads = leads.map(lead => {
-        // Map CSV headers to DB columns
-        // CSV: Name company, name of person, designation, contact, subject
-        // DB: company, contact_person, designation, phone, subject, email (optional/derived), status (default), value (default)
+    const formattedLeads = leads.map(lead => ({
+        company: lead['Name company'] || lead['Company'] || 'Unknown Company',
+        contact_person: lead['name of person'] || lead['Name'] || 'Unknown Contact',
+        designation: lead['designation'] || lead['Designation'] || '',
+        phone: lead['contact'] || lead['Contact'] || '',
+        subject: lead['subject'] || lead['Subject'] || '',
+        email: lead['email'] || lead['Email'] || '',
+        status: 'Cold Lead',
+        value: 0,
+        source: 'CSV Import'
+    }))
 
-        return {
-            company: lead['Name company'] || lead['Company'] || 'Unknown Company',
-            contact_person: lead['name of person'] || lead['Name'] || 'Unknown Contact',
-            designation: lead['designation'] || lead['Designation'] || '',
-            phone: lead['contact'] || lead['Contact'] || '',
-            subject: lead['subject'] || lead['Subject'] || '',
-            email: lead['email'] || lead['Email'] || '',
-            status: 'Cold Lead',
-            value: 0,
-            source: 'CSV Import'
+    try {
+        for (const lead of formattedLeads) {
+            await db`INSERT INTO leads (company, contact_person, designation, phone, subject, email, status, value, source)
+                     VALUES (${lead.company}, ${lead.contact_person}, ${lead.designation}, ${lead.phone}, ${lead.subject}, ${lead.email}, ${lead.status}, ${lead.value}, ${lead.source})`
         }
-    })
-
-    const { error, count } = await supabase
-        .from('leads')
-        .insert(formattedLeads)
-        .select()
-
-    if (error) {
+    } catch (error: any) {
         console.error('Import Error:', error)
         return { success: false, message: error.message }
     }
@@ -236,21 +183,13 @@ export async function addTeamMember(formData: FormData) {
         return { error: 'Name and Role are required' }
     }
 
-    // Assign a random avatar for now
     const avatarId = Math.floor(Math.random() * 8) + 1
     const avatar = `/avatars/0${avatarId}.png`
 
-    const { error } = await supabase
-        .from('team_members')
-        .insert([{
-            name,
-            role,
-            status,
-            efficiency: '99%', // Default optimistic efficiency
-            avatar
-        }])
-
-    if (error) {
+    try {
+        await db`INSERT INTO team_members (name, role, status, efficiency, avatar)
+                 VALUES (${name}, ${role}, ${status}, ${'99%'}, ${avatar})`
+    } catch (error: any) {
         console.error('Error adding team member:', error)
         return { error: error.message }
     }
@@ -258,13 +197,11 @@ export async function addTeamMember(formData: FormData) {
     revalidatePath('/team')
     return { success: true }
 }
-export async function updateInvoiceStatus(id: string, newStatus: string) {
-    const { error } = await supabase
-        .from('invoices')
-        .update({ status: newStatus })
-        .eq('id', id)
 
-    if (error) {
+export async function updateInvoiceStatus(id: string, newStatus: string) {
+    try {
+        await db`UPDATE invoices SET status = ${newStatus} WHERE id = ${id}`
+    } catch (error) {
         console.error('Error updating invoice status:', error)
         return { success: false, message: 'Failed to update status' }
     }
@@ -274,12 +211,9 @@ export async function updateInvoiceStatus(id: string, newStatus: string) {
 }
 
 export async function deleteInvoice(id: string) {
-    const { error } = await supabase
-        .from('invoices')
-        .delete()
-        .eq('id', id)
-
-    if (error) {
+    try {
+        await db`DELETE FROM invoices WHERE id = ${id}`
+    } catch (error) {
         console.error('Error deleting invoice:', error)
         return { success: false, message: 'Failed to delete invoice' }
     }
@@ -289,17 +223,12 @@ export async function deleteInvoice(id: string) {
 }
 
 export async function addAgentTool(name: string, secret: string) {
-    // Mock "Secure Save" - In production, use Supabase Vault or Hash
     const maskedSecret = `${secret.slice(0, 3)}...${secret.slice(-4)}`
 
-    const { error } = await supabase
-        .from('agent_tools')
-        .insert([{
-            name,
-            masked_secret: maskedSecret
-        }])
-
-    if (error) {
+    try {
+        await db`INSERT INTO agent_tools (name, masked_secret)
+                 VALUES (${name}, ${maskedSecret})`
+    } catch (error) {
         console.error('Error adding agent tool:', error)
         return { success: false, message: 'Failed to add tool' }
     }
@@ -309,38 +238,31 @@ export async function addAgentTool(name: string, secret: string) {
 }
 
 export async function getAgentTools() {
-    const { data, error } = await supabase
-        .from('agent_tools')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-    if (error) {
+    try {
+        const data = await db`SELECT * FROM agent_tools ORDER BY created_at DESC`
+        return data || []
+    } catch (error) {
         console.error('Error fetching agent tools:', error)
         return []
     }
-
-    return data
 }
 
 export async function importProjects(projects: any[]) {
     if (!projects || projects.length === 0) return { success: false, message: 'No data found in CSV' }
 
-    const formattedProjects = projects.map(p => {
-        // ⚠️ CSV MAPPING: Change the bracketed text to match exact CSV headers
-        return {
-            name: p['Project Name'] || p['Name'] || p['name'] || 'Unnamed Project',
-            head: p['Head'] || p['Project Head'] || p['head'] || 'Unassigned',
-            deadline: p['Deadline'] || p['deadline'] || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            status: p['Status'] || p['status'] || 'Onboarding'
+    const formattedProjects = projects.map(p => ({
+        name: p['Project Name'] || p['Name'] || p['name'] || 'Unnamed Project',
+        head: p['Head'] || p['Project Head'] || p['head'] || 'Unassigned',
+        deadline: p['Deadline'] || p['deadline'] || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: p['Status'] || p['status'] || 'Onboarding'
+    }))
+
+    try {
+        for (const project of formattedProjects) {
+            await db`INSERT INTO projects (name, head, deadline, status)
+                     VALUES (${project.name}, ${project.head}, ${project.deadline}, ${project.status})`
         }
-    })
-
-    const { error, count } = await supabase
-        .from('projects')
-        .insert(formattedProjects)
-        .select()
-
-    if (error) {
+    } catch (error: any) {
         console.error('Operations Import Error:', error)
         return { success: false, message: error.message }
     }
