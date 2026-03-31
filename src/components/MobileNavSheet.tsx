@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Briefcase, Banknote, Wrench, Menu, Users } from 'lucide-react'
+import { LayoutDashboard, Briefcase, Banknote, Wrench, Menu, Users, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetHeader } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ const mobileNavItems = [
     { href: '/finance', label: 'Finance', icon: Banknote },
     { href: '/team', label: 'Team', icon: Users },
     { href: '/tools', label: 'Tools', icon: Wrench },
+    { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function MobileNavSheet() {
