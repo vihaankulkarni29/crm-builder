@@ -2,8 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useSession, signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot, Settings } from "lucide-react"
+import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot, Settings, LogOut } from "lucide-react"
 import { HelpDialog } from "@/components/ui/help-dialog"
 
 const sidebarItems = [
@@ -18,6 +19,7 @@ const sidebarItems = [
 
 export function Sidebar() {
     const pathname = usePathname()
+    const { data: session } = useSession()
 
     return (
         <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
@@ -53,16 +55,23 @@ export function Sidebar() {
                 <HelpDialog />
             </div>
 
-            <div className="border-t p-4">
+            <div className="border-t p-4 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
                         <UserCircle className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-medium">Admin User</span>
-                        <span className="text-xs text-muted-foreground">admin@rfrncs.in</span>
+                    <div className="flex flex-col truncate">
+                        <span className="text-sm font-medium">{session?.user?.name || "Team Member"}</span>
+                        <span className="text-xs text-muted-foreground truncate">{session?.user?.email || "Resolving Identity..."}</span>
                     </div>
                 </div>
+                <button 
+                    onClick={() => signOut({ callbackUrl: '/login' })} 
+                    className="flex justify-center items-center gap-2 text-sm text-red-500 hover:text-red-400 mt-2 px-2 py-2 rounded-md transition-all hover:bg-red-500/10 w-full font-semibold"
+                >
+                    <LogOut className="h-4 w-4" />
+                    Secure Sign Out
+                </button>
             </div>
         </div>
     )

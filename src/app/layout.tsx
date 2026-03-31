@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileNavSheet } from "@/components/MobileNavSheet";
+import { SessionWrapper } from "@/components/SessionWrapper";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,15 +23,17 @@ export default function RootLayout({
     return (
         <html lang="en" className="dark">
             <body className={cn(inter.className, "flex h-screen overflow-hidden bg-background font-sans antialiased text-foreground")}>
-                <div className="hidden md:flex">
-                    <Sidebar />
-                </div>
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
-                    <MobileNavSheet />
-                    <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
-                        {children}
-                    </main>
-                </div>
+                <SessionWrapper>
+                    <div className="hidden md:flex">
+                        <Sidebar />
+                    </div>
+                    <div className="flex-1 flex flex-col h-full overflow-hidden">
+                        <MobileNavSheet />
+                        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-8">
+                            {children}
+                        </main>
+                    </div>
+                </SessionWrapper>
                 <Toaster theme="dark" position="top-right" />
             </body>
         </html>
