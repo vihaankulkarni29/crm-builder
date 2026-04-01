@@ -19,7 +19,22 @@ const sidebarItems = [
 
 export function Sidebar() {
     const pathname = usePathname()
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
+
+    if (status === 'loading') {
+        return (
+            <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card animate-pulse">
+                <div className="h-16 border-b px-6 flex items-center">
+                    <div className="h-4 w-24 bg-muted rounded"></div>
+                </div>
+                <div className="flex-1 py-4 px-4 space-y-4">
+                    {[...Array(6)].map((_, i) => (
+                        <div key={i} className="h-8 bg-muted rounded"></div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="hidden md:flex h-screen w-64 flex-col border-r bg-card text-card-foreground">

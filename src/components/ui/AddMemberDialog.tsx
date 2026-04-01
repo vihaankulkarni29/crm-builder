@@ -16,10 +16,12 @@ import { Plus } from "lucide-react"
 import { addTeamMember } from "@/app/actions"
 import { useState } from "react"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function AddMemberDialog() {
     const [open, setOpen] = useState(false)
+    const router = useRouter()
 
     // @ts-ignore
     async function handleSubmit(formData: FormData) {
@@ -28,8 +30,15 @@ export function AddMemberDialog() {
             toast.error("Failed to add member: " + result.error)
             return
         }
+        
+        // Success: Show the generated password clearly
+        toast.success(`User Added! Temporary Password: ${result.tempPassword}`, {
+            duration: 15000, // Persistent so admin can copy the pass
+            description: `Provisioned for ${formData.get('name')}`,
+        })
+        
         setOpen(false)
-        toast.success("Team member added successfully")
+        router.refresh()
     }
 
     return (

@@ -13,6 +13,7 @@ export async function getLeads(): Promise<Lead[]> {
         if (isMember && session.user?.name) {
             data = await db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} ORDER BY created_at DESC`
         } else {
+            // Admin or Ops Head: See everything
             data = await db`SELECT * FROM leads ORDER BY created_at DESC`
         }
 
@@ -59,6 +60,7 @@ export async function getProjects(): Promise<Project[]> {
         if (isMember && session.user?.name) {
             data = await db`SELECT * FROM projects WHERE head = ${session.user.name} ORDER BY deadline ASC`
         } else {
+            // Admin or Ops Head: See everything
             data = await db`SELECT * FROM projects ORDER BY deadline ASC`
         }
 
