@@ -67,10 +67,10 @@ export function Sidebar() {
                 </div>
                 <button 
                     onClick={() => signOut({ callbackUrl: '/login' })} 
-                    className="flex justify-center items-center gap-2 text-sm text-red-500 hover:text-red-400 mt-2 px-2 py-2 rounded-md transition-all hover:bg-red-500/10 w-full font-semibold"
+                    className="flex justify-center items-center gap-2 text-xs text-red-500/60 hover:text-red-500 mt-2 px-2 py-2 rounded-md transition-all hover:bg-red-500/10 w-full"
                 >
-                    <LogOut className="h-4 w-4" />
-                    Secure Sign Out
+                    <LogOut className="h-3 w-3" />
+                    Logout
                 </button>
             </div>
         </div>

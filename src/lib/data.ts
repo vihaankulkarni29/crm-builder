@@ -82,7 +82,10 @@ export async function getProjects(): Promise<Project[]> {
 export async function getTeamMembers() {
     try {
         const data = await db`SELECT * FROM team_members ORDER BY created_at DESC`
-        return data || []
+        return (data || []).map((m: any) => ({
+            ...m,
+            efficiency: m.efficiency || "0%" // Fallback for efficiency
+        }))
     } catch (error) {
         console.error('Error fetching team members:', error)
         return []

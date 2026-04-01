@@ -1,7 +1,5 @@
 import NextAuth from "next-auth"
-import Nodemailer from "next-auth/providers/nodemailer"
 import Credentials from "next-auth/providers/credentials"
-import bcrypt from "bcryptjs"
 import { db } from "@/lib/db"
 
 function NeonAdapter(): any {
@@ -115,10 +113,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     trustHost: true,
     adapter: NeonAdapter(),
     providers: [
-        Nodemailer({
-            server: process.env.EMAIL_SERVER || "smtp://fallback:2525",
-            from: process.env.EMAIL_FROM || "onboarding@resend.dev",
-        }),
         Credentials({
             name: "Credentials",
             credentials: {
@@ -132,11 +126,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 if (userRes.length === 0) return null
                 
                 const user = userRes[0]
-                if (!user.password_hash) return null
-                
-                const passwordsMatch = await bcrypt.compare(credentials.password as string, user.password_hash)
-                
-                if (passwordsMatch) {
+                // Plain text comparison for "instant" Edge performance
+                if (user.password_hash === credentials.password) {
                     return user
                 }
                 

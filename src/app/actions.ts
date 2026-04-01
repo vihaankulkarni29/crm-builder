@@ -4,8 +4,6 @@ import { db } from '@/lib/db'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { leadSchema, invoiceSchema, projectSchema, teamMemberSchema, statusUpdateSchema, agentToolSchema } from '@/lib/schemas'
-import bcrypt from 'bcryptjs'
-import { sendCredentialsEmail } from './actions/email'
 import { logActivity } from '@/lib/audit'
 import { PROJECT_WORKFLOW } from '@/lib/workflow'
 
@@ -250,19 +248,14 @@ export async function addTeamMember(formData: FormData) {
     const avatar = `/avatars/0${avatarId}.png`
 
     const tempPassword = Math.random().toString(36).slice(-8)
-    const passwordHash = await bcrypt.hash(tempPassword, 10)
 
     try {
         await db`INSERT INTO team_members (name, role, status, efficiency, avatar)
                  VALUES (${name}, ${role}, ${status || 'Online'}, ${'99%'}, ${avatar})`
                  
         await db`INSERT INTO users (name, email, role, image, password_hash)
-                 VALUES (${name}, ${email}, ${role}, ${avatar}, ${passwordHash})`
+                 VALUES (${name}, ${email}, ${role}, ${avatar}, ${tempPassword})`
                  
-        if (email) {
-            await sendCredentialsEmail(email, tempPassword)
-        }
-        
         if (session.user?.id) {
             await logActivity(session.user.id, 'TEAM_INVITE', 'NEW_HIRE', { email, role, hireName: name })
         }
@@ -272,7 +265,7 @@ export async function addTeamMember(formData: FormData) {
     }
 
     revalidatePath('/team')
-    return { success: true }
+    return { success: true, tempPassword }
 }
 
 export async function updateInvoiceStatus(id: string, newStatus: string) {
