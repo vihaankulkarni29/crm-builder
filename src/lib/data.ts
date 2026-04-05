@@ -1,6 +1,8 @@
 import { Lead, Project, Invoice } from "@/types"
 import { db } from "@/lib/db"
 import { auth } from "@/auth"
+import { ActivityEntry } from "@/lib/utils"
+
 
 export async function getLeads(): Promise<Lead[]> {
     try {
@@ -115,3 +117,38 @@ export const recentTransactions: Invoice[] = [
     { id: "INV-003", clientName: "Soylent Corp", amount: 8500, status: "Overdue", date: "2024-01-20" },
     { id: "INV-004", clientName: "Initech", amount: 2500, status: "Pending", date: "2024-02-10" },
 ]
+
+export async function getGlobalActivity(): Promise<ActivityEntry[]> {
+    try {
+        const rows = await db`
+            SELECT
+                al.id,
+                al.user_id,
+                al.action,
+                al.entity_id,
+                al.details,
+                al.created_at,
+                u.name  AS user_name,
+                u.email AS user_email,
+                u.image AS user_image
+            FROM activity_log al
+            LEFT JOIN users u ON al.user_id::uuid = u.id::uuid
+            ORDER BY al.created_at DESC
+            LIMIT 15
+        `
+        return (rows || []).map((row: any) => ({
+            id:         row.id,
+            user_id:    row.user_id,
+            action:     row.action,
+            entity_id:  row.entity_id,
+            details:    row.details,
+            created_at: row.created_at,
+            user_name:  row.user_name,
+            user_email: row.user_email,
+            user_image: row.user_image,
+        }))
+    } catch (error) {
+        console.error('Error fetching global activity:', error)
+        return []
+    }
+}
