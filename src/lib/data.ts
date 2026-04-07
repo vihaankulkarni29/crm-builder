@@ -130,7 +130,8 @@ export async function getGlobalActivity(): Promise<ActivityEntry[]> {
                 al.created_at,
                 u.name  AS user_name,
                 u.email AS user_email,
-                u.image AS user_image
+                u.image AS user_image,
+                u.role  AS user_role
             FROM activity_log al
             LEFT JOIN users u ON al.user_id::uuid = u.id::uuid
             ORDER BY al.created_at DESC
@@ -146,6 +147,7 @@ export async function getGlobalActivity(): Promise<ActivityEntry[]> {
             user_name:  row.user_name,
             user_email: row.user_email,
             user_image: row.user_image,
+            user_role:  row.user_role,
         }))
     } catch (error) {
         console.error('Error fetching global activity:', error)

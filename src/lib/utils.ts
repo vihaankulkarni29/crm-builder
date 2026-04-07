@@ -17,14 +17,17 @@ export interface ActivityEntry {
     user_name: string | null
     user_email: string | null
     user_image: string | null
+    user_role: string | null
 }
 
 export function formatActivityAction(action: string): { label: string; variant: ActivityBadgeVariant } {
     const map: Record<string, { label: string; variant: ActivityBadgeVariant }> = {
-        UPDATE_LEAD_STATUS:   { label: 'advanced a lead',           variant: 'update' },
-        DELETE_LEAD:          { label: 'archived a lead',           variant: 'delete' },
+        CREATE_LEAD:          { label: 'spotted a new opportunity', variant: 'create' },
+        UPDATE_LEAD_STATUS:   { label: 'pushed the needle on a lead', variant: 'update' },
+        DELETE_LEAD:          { label: 'archived an opportunity',   variant: 'delete' },
         CREATE_PROJECT:       { label: 'birthed a new project',     variant: 'create' },
-        UPDATE_PROJECT_STATUS:{ label: 'moved a project forward',   variant: 'update' },
+        UPDATE_PROJECT_STATUS:{ label: 'pushed the needle on a project', variant: 'update' },
+        CONVERT_PROJECT:      { label: 'secured the bag (Lead → Project)', variant: 'create' },
         TEAM_INVITE:          { label: 'added a new recruit',       variant: 'create' },
         CHANGE_PASSWORD:      { label: 'secured their identity',    variant: 'default' },
     }
