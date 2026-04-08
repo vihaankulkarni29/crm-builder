@@ -120,15 +120,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) return null
+                if (!credentials?.email || !credentials?.password) {
+                    console.log("🔍 Auth: Missing email or password")
+                    return null
+                }
                 
-                const userRes = await db`SELECT * FROM users WHERE email = ${credentials.email as string}`
-                if (userRes.length === 0) return null
-                
-                const user = userRes[0]
-                // Plain text comparison for "instant" Edge performance
-                if (user.password_hash === credentials.password) {
-                    return user
+                try {
+                    console.log(`🔍 Auth: Attempting lookup for ${credentials.email}`)
+                    // Wrap the DB call in a 10s timeout
+                    const userRes = await queryWithTimeout(
+                        db`SELECT * FROM users WHERE email = ${credentials.email as string}`
+                    )
+                    
+                    if (userRes.length === 0) {
+                        console.log("🔍 Auth: User not found in database")
+                        return null
+                    }
+                    
+                    const user = userRes[0]
+                    console.log(`🔍 Auth: User found, checking password for ${user.email}`)
+                    
+                    // Plain text comparison for "instant" Edge performance
+                    if (user.password_hash === credentials.password) {
+                        console.log("✅ Auth: Success")
+                        return user
+                    } else {
+                        console.log("❌ Auth: Invalid Password")
+                    }
+                } catch (error) {
+                    console.error("❌ Auth Error (Critical):", error)
+                    return null
                 }
                 
                 return null

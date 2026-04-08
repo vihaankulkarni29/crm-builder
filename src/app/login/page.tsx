@@ -9,27 +9,47 @@ import { toast } from 'sonner'
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
+    const [isRedirecting, setIsRedirecting] = useState(false)
     const router = useRouter()
 
     async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
         setIsLoading(true)
         
-        const formData = new FormData(e.currentTarget)
-        const email = formData.get('email') as string
-        const password = formData.get('password') as string
-        
-        const result = await signIn('credentials', {
-            email,
-            password,
-            redirect: false,
-        })
-        
-        if (result?.error) {
-            toast.error("Invalid credentials.")
+        // Safety Timeout: Reset loading state if nothing happens in 15 seconds
+        const safetyTimeout = setTimeout(() => {
+            if (isLoading && !isRedirecting) {
+                setIsLoading(false)
+                toast.error("Connection is slow. Please try again or check your internet.")
+            }
+        }, 15000)
+
+        try {
+            const formData = new FormData(e.currentTarget)
+            const email = formData.get('email') as string
+            const password = formData.get('password') as string
+            
+            const result = await signIn('credentials', {
+                email,
+                password,
+                redirect: false,
+            })
+            
+            clearTimeout(safetyTimeout)
+
+            if (result?.error) {
+                toast.error("Invalid credentials.")
+                setIsLoading(false)
+            } else {
+                setIsRedirecting(true)
+                toast.success("Success! Redirecting...")
+                router.push('/')
+            }
+        } catch (error) {
+            clearTimeout(safetyTimeout)
+            console.error("Login Handler Error:", error)
+            toast.error("An unexpected error occurred.")
             setIsLoading(false)
-        } else {
-            router.push('/')
         }
     }
 
@@ -47,7 +67,7 @@ export default function LoginPage() {
                         type="email"
                         placeholder="Email Address"
                         className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                        disabled={isLoading}
+                        disabled={isLoading || isRedirecting}
                         required
                     />
                     <Input
@@ -55,11 +75,15 @@ export default function LoginPage() {
                         type="password"
                         placeholder="Master Password"
                         className="bg-white/5 border-white/10 text-white placeholder:text-white/20"
-                        disabled={isLoading}
+                        disabled={isLoading || isRedirecting}
                         required
                     />
-                    <Button type="submit" disabled={isLoading} className="bg-white text-black hover:bg-white/90">
-                        {isLoading ? "Authenticating..." : "Sign In"}
+                    <Button 
+                        type="submit" 
+                        disabled={isLoading || isRedirecting} 
+                        className="bg-white text-black hover:bg-white/90"
+                    >
+                        {isRedirecting ? "Redirecting..." : isLoading ? "Authenticating..." : "Sign In"}
                     </Button>
                 </form>
             </div>

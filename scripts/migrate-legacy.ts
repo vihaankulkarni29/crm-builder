@@ -6,6 +6,11 @@ import path from 'path'
 // Load .env.local
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 
+if (!process.env.DATABASE_URL) {
+    console.error("❌ DATABASE_URL is missing in .env.local")
+    process.exit(1)
+}
+
 const neonDb = neon(process.env.DATABASE_URL!)
 
 const supabaseUrl = "https://tlselvnpenltsimnoprz.supabase.co"
@@ -23,13 +28,13 @@ async function fetchFromSupabase(table: string) {
 }
 
 async function migrate() {
-    console.log("🚀 Starting Legacy Data Migration...")
+    console.log("🚀 Starting Legacy Data Migration (Supabase -> Neon)...")
 
     try {
         // 1. Migrate Leads
-        console.log("📦 Migrating Leads...")
+        console.log("📦 Extracting Leads from Supabase...")
         const legacyLeads = await fetchFromSupabase('leads')
-        console.log(`Found ${legacyLeads.length} leads in Supabase.`)
+        console.log(`✅ Found ${legacyLeads.length} leads. Batch inserting into Neon...`)
 
         for (const lead of legacyLeads) {
             await neonDb`
@@ -62,12 +67,12 @@ async function migrate() {
                     assigned_to = EXCLUDED.assigned_to
             `
         }
-        console.log("✅ Leads Migrated Successfully.")
+        console.log("🏁 Leads Migration Complete.")
 
         // 2. Migrate Projects
-        console.log("📂 Migrating Projects...")
+        console.log("\n📂 Extracting Projects from Supabase...")
         const legacyProjects = await fetchFromSupabase('projects')
-        console.log(`Found ${legacyProjects.length} projects in Supabase.`)
+        console.log(`✅ Found ${legacyProjects.length} projects. Batch inserting into Neon...`)
 
         for (const project of legacyProjects) {
             await neonDb`
@@ -90,9 +95,9 @@ async function migrate() {
                     assigned_to = EXCLUDED.assigned_to
             `
         }
-        console.log("✅ Projects Migrated Successfully.")
+        console.log("🏁 Projects Migration Complete.")
 
-        console.log("🎉 Migration Finished!")
+        console.log("\n✨ The Great Migration is Finished!")
 
     } catch (error) {
         console.error("❌ Migration Failed:", error)
