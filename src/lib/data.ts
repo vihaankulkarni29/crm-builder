@@ -1,5 +1,5 @@
 import { Lead, Project, Invoice } from "@/types"
-import { db } from "@/lib/db"
+import { db, queryWithTimeout } from "@/lib/db"
 import { auth } from "@/auth"
 import { ActivityEntry } from "@/lib/utils"
 
@@ -13,10 +13,10 @@ export async function getLeads(): Promise<Lead[]> {
         let data
 
         if (isMember && session.user?.name) {
-            data = await db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} ORDER BY created_at DESC`
+            data = await queryWithTimeout(db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} ORDER BY created_at DESC`)
         } else {
             // Admin or Ops Head: See everything
-            data = await db`SELECT * FROM leads ORDER BY created_at DESC`
+            data = await queryWithTimeout(db`SELECT * FROM leads ORDER BY created_at DESC`)
         }
 
         return (data || []).map((lead: any) => ({
@@ -36,7 +36,7 @@ export async function getLeads(): Promise<Lead[]> {
 
 export async function getInvoices(): Promise<Invoice[]> {
     try {
-        const data = await db`SELECT * FROM invoices ORDER BY date DESC`
+        const data = await queryWithTimeout(db`SELECT * FROM invoices ORDER BY date DESC`)
 
         return (data || []).map((inv: any) => ({
             id: inv.id,
@@ -60,10 +60,10 @@ export async function getProjects(): Promise<Project[]> {
         let data
 
         if (isMember && session.user?.name) {
-            data = await db`SELECT * FROM projects WHERE head = ${session.user.name} ORDER BY deadline ASC`
+            data = await queryWithTimeout(db`SELECT * FROM projects WHERE head = ${session.user.name} ORDER BY deadline ASC`)
         } else {
             // Admin or Ops Head: See everything
-            data = await db`SELECT * FROM projects ORDER BY deadline ASC`
+            data = await queryWithTimeout(db`SELECT * FROM projects ORDER BY deadline ASC`)
         }
 
         return (data || []).map((project: any) => ({
@@ -85,7 +85,7 @@ export async function getProjects(): Promise<Project[]> {
 
 export async function getTeamMembers() {
     try {
-        const data = await db`SELECT * FROM team_members ORDER BY created_at DESC`
+        const data = await queryWithTimeout(db`SELECT * FROM team_members ORDER BY created_at DESC`)
         return (data || []).map((m: any) => ({
             ...m,
             efficiency: m.efficiency || "0%" // Fallback for efficiency
