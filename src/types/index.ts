@@ -15,7 +15,7 @@ export interface Project {
         name: string
         avatar: string
     }
-    status: "On Track" | "Delayed" | "Completed"
+    status: "Onboarding" | "In Progress" | "Review" | "Blocked" | "Completed"
     deadline: string // ISO date string
     assigned_to?: string
 }

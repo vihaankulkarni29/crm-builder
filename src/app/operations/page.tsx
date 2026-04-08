@@ -1,13 +1,21 @@
-import { ProjectTable } from "@/components/operations/ProjectTable"
+import { KanbanBoard } from "@/components/operations/KanbanBoard"
 import { getProjects } from "@/lib/data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddProjectDialog } from "@/components/operations/AddProjectDialog"
 import { CSVImportOperations } from "@/components/operations/CSVImportOperations"
+import { PROJECT_WORKFLOW } from "@/lib/workflow"
+import { Project } from "@/types"
 
 export const revalidate = 0;
 
 export default async function OperationsPage() {
     const projects = await getProjects()
+
+    // Transform flat array into grouped dictionary for Kanban
+    const groupedProjects = Object.keys(PROJECT_WORKFLOW).reduce((acc, status) => {
+        acc[status] = projects.filter(p => p.status === status)
+        return acc
+    }, {} as Record<string, Project[]>)
 
     return (
         <div className="flex flex-col gap-6 p-8 max-w-7xl mx-auto">
@@ -19,22 +27,24 @@ export default async function OperationsPage() {
                 </div>
             </div>
 
-            <Tabs defaultValue="all" className="w-full">
+            <Tabs defaultValue="board" className="w-full">
                 <div className="flex items-center justify-between mb-4">
                     <TabsList>
-                        <TabsTrigger value="all">All Projects</TabsTrigger>
+                        <TabsTrigger value="board">Operations Board</TabsTrigger>
                         <TabsTrigger value="my">My Projects</TabsTrigger>
                     </TabsList>
                 </div>
-                <TabsContent value="all">
-                    <div className="w-full overflow-x-auto">
-                        <ProjectTable projects={projects} />
-                    </div>
+                <TabsContent value="board" className="mt-6">
+                    <KanbanBoard initialData={groupedProjects} />
                 </TabsContent>
-                <TabsContent value="my">
-                    {/* Mocking "My Projects" filter by showing a subset or empty state */}
-                    <div className="w-full overflow-x-auto">
-                        <ProjectTable projects={projects.filter(p => p.head.name === "Alice")} />
+                <TabsContent value="my" className="mt-6">
+                    <div className="w-full">
+                        <KanbanBoard 
+                            initialData={Object.keys(PROJECT_WORKFLOW).reduce((acc, status) => {
+                                acc[status] = projects.filter(p => p.status === status && p.head.name === "Alice")
+                                return acc
+                            }, {} as Record<string, Project[]>)} 
+                        />
                     </div>
                 </TabsContent>
             </Tabs>
