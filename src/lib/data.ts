@@ -106,9 +106,9 @@ export const leads: Lead[] = [
 ]
 
 export const projects: Project[] = [
-    { id: "1", name: "Website Redesign", head: { name: "Alice", avatar: "https://github.com/shadcn.png" }, status: "On Track", deadline: "2024-03-15" },
-    { id: "2", name: "Mobile App MVP", head: { name: "Bob", avatar: "https://github.com/shadcn.png" }, status: "Delayed", deadline: "2024-02-28" },
-    { id: "3", name: "Marketing Campaign", head: { name: "Charlie", avatar: "https://github.com/shadcn.png" }, status: "On Track", deadline: "2024-04-01" },
+    { id: "1", name: "Website Redesign", head: { name: "Alice", avatar: "https://github.com/shadcn.png" }, status: "In Progress", deadline: "2024-03-15" },
+    { id: "2", name: "Mobile App MVP", head: { name: "Bob", avatar: "https://github.com/shadcn.png" }, status: "Blocked", deadline: "2024-02-28" },
+    { id: "3", name: "Marketing Campaign", head: { name: "Charlie", avatar: "https://github.com/shadcn.png" }, status: "In Progress", deadline: "2024-04-01" },
 ]
 
 export const recentTransactions: Invoice[] = [

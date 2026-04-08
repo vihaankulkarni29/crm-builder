@@ -45,14 +45,14 @@ export function ProjectTable({ projects }: ProjectTableProps) {
                             <TableCell>
                                 <Badge
                                     variant={
-                                        project.status === "On Track"
+                                        project.status === "In Progress" || project.status === "Review"
                                             ? "default"
-                                            : project.status === "Delayed"
+                                            : project.status === "Blocked"
                                                 ? "destructive"
                                                 : "secondary"
                                     }
                                     className={cn(
-                                        project.status === "On Track" && "bg-green-600 hover:bg-green-700",
+                                        project.status === "In Progress" && "bg-emerald-600 hover:bg-emerald-700",
                                         project.status === "Completed" && "bg-blue-600 hover:bg-blue-700"
                                     )}
                                 >
