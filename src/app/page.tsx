@@ -7,10 +7,12 @@ import { getInvoices, getLeads, getProjects, getGlobalActivity } from "@/lib/dat
 export const revalidate = 0;
 
 export default async function Dashboard() {
-    const leads = await getLeads();
-    const projects = await getProjects();
-    const invoices = await getInvoices();
-    const activity = await getGlobalActivity();
+    const [leads, projects, invoices, activity] = await Promise.all([
+        getLeads(),
+        getProjects(),
+        getInvoices(),
+        getGlobalActivity()
+    ]);
 
     const activeLeads = leads.filter((l) => l.status !== "Closed" && l.status !== "Dead").length;
     const activeProjects = projects.filter((p) => p.status !== "Completed").length;
