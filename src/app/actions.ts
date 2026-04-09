@@ -417,3 +417,80 @@ export async function updateProjectStatus(id: string, newStatus: string) {
     revalidatePath('/operations')
     return { success: true }
 }
+
+export async function addProjectTask(projectId: string, taskName: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    if (!taskName.trim()) {
+        return { success: false, message: 'Task name is required' }
+    }
+
+    try {
+        await db`INSERT INTO project_tasks (project_id, task_name) VALUES (${projectId}, ${taskName})`
+    } catch (error) {
+        console.error('Error adding project task:', error)
+        return { success: false, message: 'Failed to add task' }
+    }
+
+    revalidatePath('/operations')
+    return { success: true }
+}
+
+export async function toggleTaskCompletion(taskId: string, isCompleted: boolean) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        await db`UPDATE project_tasks SET is_completed = ${isCompleted} WHERE id = ${taskId}`
+    } catch (error) {
+        console.error('Error toggling project task:', error)
+        return { success: false, message: 'Failed to toggle task' }
+    }
+
+    revalidatePath('/operations')
+    return { success: true }
+}
+
+export async function addProjectComment(projectId: string, content: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    if (!content.trim()) {
+        return { success: false, message: 'Comment content is required' }
+    }
+
+    try {
+        await db`INSERT INTO project_comments (project_id, user_id, content) VALUES (${projectId}, ${session.user?.id}, ${content})`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'ADD_COMMENT', projectId, { contentPreview: content.substring(0, 30) })
+        }
+    } catch (error) {
+        console.error('Error adding project comment:', error)
+        return { success: false, message: 'Failed to add comment' }
+    }
+
+    revalidatePath('/operations')
+    return { success: true }
+}
+
+export async function getProjectDetails(projectId: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        const tasks = await db`SELECT * FROM project_tasks WHERE project_id = ${projectId} ORDER BY created_at ASC`
+        const comments = await db`
+            SELECT pc.*, u.name as user_name, u.image as user_avatar 
+            FROM project_comments pc
+            LEFT JOIN users u ON pc.user_id = u.id
+            WHERE pc.project_id = ${projectId} 
+            ORDER BY pc.created_at ASC
+        `
+        return { tasks, comments }
+    } catch (error) {
+        console.error('Error fetching project details:', error)
+        return { tasks: [], comments: [] }
+    }
+}

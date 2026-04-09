@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { updateProjectStatus } from '@/app/actions'
 import { toast } from 'sonner'
 import { PROJECT_WORKFLOW } from '@/lib/workflow'
+import { ProjectSheet } from './ProjectSheet'
 
 interface KanbanBoardProps {
     initialData: Record<string, Project[]>
@@ -15,6 +16,7 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ initialData }: KanbanBoardProps) {
     const [data, setData] = useState(initialData)
+    const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
     const onDragEnd = async (result: DropResult) => {
         const { source, destination, draggableId } = result
@@ -91,7 +93,10 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                                                     {...provided.draggableProps}
                                                     {...provided.dragHandleProps}
                                                 >
-                                                    <Card className="bg-white/5 border-white/10 backdrop-blur-md hover:border-white/20 transition-all cursor-grab active:cursor-grabbing group">
+                                                    <Card 
+                                                        className="bg-white/5 border-white/10 backdrop-blur-md hover:border-white/20 transition-all cursor-grab active:cursor-grabbing group"
+                                                        onClick={() => setSelectedProject(project)}
+                                                    >
                                                         <CardHeader className="p-4 space-y-3">
                                                             <CardTitle className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
                                                                 {project.name}
@@ -121,6 +126,12 @@ export function KanbanBoard({ initialData }: KanbanBoardProps) {
                     </div>
                 ))}
             </div>
+
+            <ProjectSheet 
+                project={selectedProject} 
+                isOpen={!!selectedProject} 
+                onClose={() => setSelectedProject(null)} 
+            />
         </DragDropContext>
     )
 }
