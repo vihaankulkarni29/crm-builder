@@ -13,10 +13,10 @@ export async function getLeads(): Promise<Lead[]> {
         let data
 
         if (isMember && session.user?.name) {
-            data = await queryWithTimeout(db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} ORDER BY created_at DESC`)
+            data = await queryWithTimeout(db`SELECT * FROM leads WHERE assigned_to = ${session.user.name} AND lifecycle_stage = 'QUALIFIED' ORDER BY created_at DESC`)
         } else {
             // Admin or Ops Head: See everything
-            data = await queryWithTimeout(db`SELECT * FROM leads ORDER BY created_at DESC`)
+            data = await queryWithTimeout(db`SELECT * FROM leads WHERE lifecycle_stage = 'QUALIFIED' ORDER BY created_at DESC`)
         }
 
         return (data || []).map((lead: any) => ({
@@ -27,6 +27,32 @@ export async function getLeads(): Promise<Lead[]> {
             status: lead.status,
             source: lead.source,
             assigned_to: lead.assigned_to,
+            email: lead.email,
+            lifecycle_stage: lead.lifecycle_stage
+        }))
+    } catch (error) {
+        console.error("Error fetching leads:", error)
+        return []
+    }
+}
+
+export async function getProspects(): Promise<Lead[]> {
+    try {
+        const session = await auth()
+        if (!session) return []
+
+        const data = await queryWithTimeout(db`SELECT * FROM leads WHERE lifecycle_stage != 'QUALIFIED' OR lifecycle_stage IS NULL ORDER BY created_at DESC`)
+
+        return (data || []).map((lead: any) => ({
+            id: lead.id,
+            companyName: lead.company,
+            poc: lead.contact_person,
+            value: Number(lead.value),
+            status: lead.status,
+            source: lead.source,
+            assigned_to: lead.assigned_to,
+            email: lead.email,
+            lifecycle_stage: lead.lifecycle_stage
         }))
     } catch (error) {
         console.error("Error fetching leads:", error)

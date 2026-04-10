@@ -513,3 +513,52 @@ export async function updateProjectDeadline(projectId: string, newDate: string) 
     revalidatePath('/operations')
     return { success: true }
 }
+
+export async function batchInsertProspects(data: any[]) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    if (!data || data.length === 0) {
+        return { success: false, message: 'No data provided' }
+    }
+
+    try {
+        // Construct batched insert. Fallback to raw stage context.
+        for (const prospect of data) {
+            await db`
+                INSERT INTO leads (company, contact_person, email, lifecycle_stage, status, source)
+                VALUES (${prospect.company || 'Unknown'}, ${prospect.name || prospect.contact_person || ''}, ${prospect.email || ''}, 'RAW', 'Cold Lead', 'Apollo')
+            `
+        }
+
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'BULK_IMPORT', 'Leads', { count: data.length })
+        }
+    } catch (error) {
+        console.error('Error batch inserting prospects:', error)
+        return { success: false, message: 'Failed to insert prospects' }
+    }
+
+    revalidatePath('/prospects')
+    return { success: true }
+}
+
+export async function promoteProspect(prospectId: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        await db`UPDATE leads SET lifecycle_stage = 'QUALIFIED' WHERE id = ${prospectId}`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'PROMOTE_PROSPECT', prospectId, {})
+        }
+    } catch (error) {
+        console.error('Error promoting prospect:', error)
+        return { success: false, message: 'Failed to promote prospect' }
+    }
+
+    revalidatePath('/prospects')
+    revalidatePath('/leads')
+    return { success: true }
+}
