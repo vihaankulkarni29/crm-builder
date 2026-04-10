@@ -494,3 +494,22 @@ export async function getProjectDetails(projectId: string) {
         return { tasks: [], comments: [] }
     }
 }
+
+export async function updateProjectDeadline(projectId: string, newDate: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        await db`UPDATE projects SET deadline = ${newDate} WHERE id = ${projectId}`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'UPDATE_PROJECT_DEADLINE', projectId, { newDate })
+        }
+    } catch (error) {
+        console.error('Error updating project deadline:', error)
+        return { success: false, message: 'Failed to update deadline' }
+    }
+
+    revalidatePath('/operations')
+    return { success: true }
+}
