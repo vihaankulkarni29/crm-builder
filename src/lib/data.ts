@@ -41,7 +41,7 @@ export async function getProspects(): Promise<Lead[]> {
         const session = await auth()
         if (!session) return []
 
-        const data = await queryWithTimeout(db`SELECT * FROM leads WHERE lifecycle_stage != 'QUALIFIED' OR lifecycle_stage IS NULL ORDER BY created_at DESC`)
+        const data = await queryWithTimeout(db`SELECT * FROM leads WHERE lifecycle_stage = 'RAW' OR lifecycle_stage IS NULL ORDER BY created_at DESC`)
 
         return (data || []).map((lead: any) => ({
             id: lead.id,
