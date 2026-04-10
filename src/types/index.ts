@@ -8,6 +8,7 @@ export interface Lead {
     assigned_to?: string
     email?: string
     lifecycle_stage?: string
+    score?: number
 }
 
 export interface Project {

@@ -52,7 +52,8 @@ export async function getProspects(): Promise<Lead[]> {
             source: lead.source,
             assigned_to: lead.assigned_to,
             email: lead.email,
-            lifecycle_stage: lead.lifecycle_stage
+            lifecycle_stage: lead.lifecycle_stage,
+            score: Number(lead.score) || 0
         }))
     } catch (error) {
         console.error("Error fetching leads:", error)

@@ -523,11 +523,26 @@ export async function batchInsertProspects(data: any[]) {
     }
 
     try {
-        // Construct batched insert. Fallback to raw stage context.
+        const { calculateLeadScore } = await import('@/lib/scoring')
+
+        // Construct batched insert with scoring logic
         for (const prospect of data) {
+            const score = calculateLeadScore(prospect)
+            const revNum = prospect.revenue_amount ? Number(String(prospect.revenue_amount).replace(/[^0-9.-]+/g,"")) : null
+
             await db`
-                INSERT INTO leads (company, contact_person, email, lifecycle_stage, status, source)
-                VALUES (${prospect.company || 'Unknown'}, ${prospect.name || prospect.contact_person || ''}, ${prospect.email || ''}, 'RAW', 'Cold Lead', 'Apollo')
+                INSERT INTO leads (
+                    company, contact_person, email, phone,
+                    company_social, decision_maker_social, sector,
+                    revenue_listed, revenue_amount, score,
+                    lifecycle_stage, status, source
+                )
+                VALUES (
+                    ${prospect.company || 'Unknown'}, ${prospect.contact_person || ''}, ${prospect.email || ''}, ${prospect.phone || null},
+                    ${prospect.company_social || null}, ${prospect.decision_maker_social || null}, ${prospect.sector || null},
+                    ${prospect.revenue_listed || false}, ${isNaN(revNum!) ? null : revNum}, ${score},
+                    'RAW', 'Cold Lead', 'Apollo'
+                )
             `
         }
 
@@ -543,22 +558,28 @@ export async function batchInsertProspects(data: any[]) {
     return { success: true }
 }
 
-export async function promoteProspect(prospectId: string) {
+export async function promoteProspect(prospectId: string, painPoint?: string, budget?: number) {
     const session = await auth()
     if (!session) throw new Error('401 Unauthorized')
 
     try {
-        await db`UPDATE leads SET lifecycle_stage = 'QUALIFIED' WHERE id = ${prospectId}`
+        await db`
+            UPDATE leads 
+            SET lifecycle_stage = 'QUALIFIED', 
+                pain_point = ${painPoint || null}, 
+                estimated_budget = ${budget || null}
+            WHERE id = ${prospectId}
+        `
         
         if (session.user?.id) {
-            await logActivity(session.user.id, 'PROMOTE_PROSPECT', prospectId, {})
+            await logActivity(session.user.id, 'PROMOTE_PROSPECT', prospectId, { painPoint, budget })
         }
     } catch (error) {
         console.error('Error promoting prospect:', error)
         return { success: false, message: 'Failed to promote prospect' }
     }
 
-    revalidatePath('/prospects')
+    revalidatePath('/sandbox')
     revalidatePath('/leads')
     return { success: true }
 }

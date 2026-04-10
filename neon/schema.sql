@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS leads (
     subject TEXT,
     assigned_to TEXT,
     lifecycle_stage TEXT DEFAULT 'RAW',
+    score INTEGER DEFAULT 0,
+    revenue_listed BOOLEAN,
+    revenue_amount NUMERIC,
+    company_social TEXT,
+    decision_maker_social TEXT,
+    sector TEXT,
+    pain_point TEXT,
+    estimated_budget NUMERIC,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

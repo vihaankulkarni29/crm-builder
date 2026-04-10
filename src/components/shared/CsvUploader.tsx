@@ -33,7 +33,14 @@ export function CsvUploader() {
                     contact_person: row['First Name'] 
                         ? `${row['First Name']} ${row['Last Name'] || ''}`.trim() 
                         : row['Name'] || row['Contact Person'] || row['name'],
-                    email: row['Email'] || row['Email Address'] || row['email']
+                    email: row['Email'] || row['Email Address'] || row['email'],
+                    phone: row['Phone'] || row['Corporate Phone'] || row['phone'],
+                    website: row['Website'] || row['Company Website'] || row['website'],
+                    company_social: row['Company LinkedIn URL'] || row['Company Social'] || row['company_social'],
+                    decision_maker_social: row['Person LinkedIn URL'] || row['LinkedIn'] || row['social'],
+                    revenue_amount: row['Annual Revenue'] || row['Revenue'] || row['revenue_amount'],
+                    revenue_listed: row['Annual Revenue'] ? true : false,
+                    sector: row['Industry'] || row['Keywords'] || row['sector']
                 })).filter(row => row.company || row.contact_person || row.email) // filter empty rows
 
                 if (mappedData.length === 0) {

@@ -9,8 +9,8 @@ import { HelpDialog } from "@/components/ui/help-dialog"
 
 const sidebarItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/sandbox", label: "Sandbox", icon: Filter },
     { href: "/leads", label: "Leads", icon: Users },
-    { href: "/prospects", label: "Sandbox", icon: Filter },
     { href: "/operations", label: "Operations", icon: Briefcase },
     { href: "/finance", label: "Finance", icon: DollarSign },
     { href: "/team", label: "Team", icon: UserCircle },
