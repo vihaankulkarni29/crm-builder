@@ -4,12 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useSession, signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot, Settings, LogOut, Filter } from "lucide-react"
 import { HelpDialog } from "@/components/ui/help-dialog"
 
 const sidebarItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/leads", label: "Leads", icon: Users },
+    { href: "/prospects", label: "Sandbox", icon: Filter },
     { href: "/operations", label: "Operations", icon: Briefcase },
     { href: "/finance", label: "Finance", icon: DollarSign },
     { href: "/team", label: "Team", icon: UserCircle },

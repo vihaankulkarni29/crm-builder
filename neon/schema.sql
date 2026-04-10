@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS leads (
     phone TEXT,
     subject TEXT,
     assigned_to TEXT,
+    lifecycle_stage TEXT DEFAULT 'RAW',
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

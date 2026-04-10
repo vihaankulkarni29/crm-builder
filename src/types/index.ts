@@ -6,6 +6,8 @@ export interface Lead {
     status: "Cold Lead" | "Hot Lead" | "Negotiation" | "Closed" | "Dead"
     source: "Apollo" | "Seamless" | "Website" | "Referral"
     assigned_to?: string
+    email?: string
+    lifecycle_stage?: string
 }
 
 export interface Project {
