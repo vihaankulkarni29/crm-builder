@@ -9,7 +9,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { PromoteButton } from '@/components/shared/PromoteButton'
+import { QualifyDialog } from '@/components/shared/QualifyDialog'
 import { Badge } from '@/components/ui/badge'
 
 export default async function ProspectsPage() {
@@ -19,8 +19,8 @@ export default async function ProspectsPage() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Prospect Sandbox</h1>
-                    <p className="text-white/60">Air-locked environment for raw lead ingestion and qualification.</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-white mb-1">Advanced Sandbox</h1>
+                    <p className="text-white/60">Air-locked environment for raw lead ingestion and intelligent qualification scoring.</p>
                 </div>
             </div>
 
@@ -50,12 +50,19 @@ export default async function ProspectsPage() {
                                         <TableHead className="text-white/60 font-medium">Company</TableHead>
                                         <TableHead className="text-white/60 font-medium">Contact Person</TableHead>
                                         <TableHead className="text-white/60 font-medium">Email</TableHead>
-                                        <TableHead className="text-white/60 font-medium">Source Status</TableHead>
+                                        <TableHead className="text-white/60 font-medium">Score</TableHead>
+                                        <TableHead className="text-white/60 font-medium">Status</TableHead>
                                         <TableHead className="text-right text-white/60 font-medium">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {prospects.map((prospect) => (
+                                    {prospects.map((prospect) => {
+                                        const score = prospect.score || 0
+                                        let scoreColor = "text-red-500"
+                                        if (score >= 80) scoreColor = "text-emerald-500"
+                                        else if (score >= 50) scoreColor = "text-yellow-500"
+
+                                        return (
                                         <TableRow key={prospect.id} className="border-white/10 hover:bg-white/[0.02] transition-colors group">
                                             <TableCell className="font-medium text-white/80">
                                                 {prospect.companyName}
@@ -66,16 +73,19 @@ export default async function ProspectsPage() {
                                             <TableCell className="text-white/60">
                                                 {prospect.email || <span className="text-white/20 italic">Unknown</span>}
                                             </TableCell>
+                                            <TableCell className={`font-bold ${scoreColor}`}>
+                                                {score}/100
+                                            </TableCell>
                                             <TableCell>
                                                 <Badge variant="secondary" className="bg-blue-500/10 text-blue-400 hover:bg-blue-500/20">
                                                     {prospect.lifecycle_stage}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <PromoteButton id={prospect.id} />
+                                                <QualifyDialog id={prospect.id} />
                                             </TableCell>
                                         </TableRow>
-                                    ))}
+                                    )})}
                                 </TableBody>
                             </Table>
                         </div>
