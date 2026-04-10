@@ -6,19 +6,22 @@ import {
     SheetContent,
     SheetHeader,
     SheetTitle,
-    SheetDescription,
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Project } from '@/types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { getProjectDetails, addProjectTask, toggleTaskCompletion, addProjectComment } from '@/app/actions'
+import { getProjectDetails, addProjectTask, toggleTaskCompletion, addProjectComment, updateProjectDeadline } from '@/app/actions'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { Checkbox } from '@/components/ui/checkbox'
-import { PlusCircle, Send } from 'lucide-react'
+import { PlusCircle, Send, CalendarIcon } from 'lucide-react'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Calendar } from '@/components/ui/calendar'
+import { format } from 'date-fns'
+import { cn } from '@/lib/utils'
 
 interface ProjectSheetProps {
     project: Project | null
@@ -81,6 +84,21 @@ export function ProjectSheet({ project, isOpen, onClose }: ProjectSheetProps) {
         }
     }
 
+    const handleDateChange = async (date: Date | undefined) => {
+        if (!project || !date) return
+        const isoString = date.toISOString()
+        
+        // Optimistic State Handling via internal mock
+        const res = await updateProjectDeadline(project.id, isoString)
+        if (res.success) {
+            toast.success('Deadline updated')
+            // Re-fetch or rely on the parent board revalidate pushing new props
+            onClose() // Close to cleanly reset state from upper props
+        } else {
+            toast.error(res.message)
+        }
+    }
+
     if (!project) return null
 
     return (
@@ -91,9 +109,29 @@ export function ProjectSheet({ project, isOpen, onClose }: ProjectSheetProps) {
                         <Badge variant="outline" className="border-white/20 text-white/60">
                             {project.status}
                         </Badge>
-                        <span className="text-xs text-white/40">
-                            Due {new Date(project.deadline).toLocaleDateString()}
-                        </span>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                        "w-[240px] justify-start text-left font-normal bg-white/5 border-white/10 text-white hover:bg-white/10",
+                                        !project.deadline && "text-muted-foreground"
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                                    {project.deadline ? format(new Date(project.deadline), "PPP") : <span>Set deadline</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 bg-[#0B0C10] border-white/10" align="end">
+                                <Calendar
+                                    mode="single"
+                                    selected={project.deadline ? new Date(project.deadline) : undefined}
+                                    onSelect={handleDateChange}
+                                    initialFocus
+                                    className="bg-[#0B0C10] text-white"
+                                />
+                            </PopoverContent>
+                        </Popover>
                     </div>
                     
                     <SheetTitle className="text-2xl font-bold tracking-tight text-white flex items-center gap-3">
