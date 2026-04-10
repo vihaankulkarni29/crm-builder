@@ -583,3 +583,41 @@ export async function promoteProspect(prospectId: string, painPoint?: string, bu
     revalidatePath('/leads')
     return { success: true }
 }
+
+export async function rejectProspect(prospectId: string) {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        await db`UPDATE leads SET lifecycle_stage = 'REJECTED' WHERE id = ${prospectId}`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'REJECT_PROSPECT', prospectId, {})
+        }
+    } catch (error) {
+        console.error('Error rejecting prospect:', error)
+        return { success: false, message: 'Failed to reject prospect' }
+    }
+
+    revalidatePath('/sandbox')
+    return { success: true }
+}
+
+export async function bulkRejectColdProspects() {
+    const session = await auth()
+    if (!session) throw new Error('401 Unauthorized')
+
+    try {
+        await db`UPDATE leads SET lifecycle_stage = 'REJECTED' WHERE lifecycle_stage = 'RAW' AND score < 50`
+        
+        if (session.user?.id) {
+            await logActivity(session.user.id, 'PURGE_COLD_PROSPECTS', 'Bulk Action', {})
+        }
+    } catch (error) {
+        console.error('Error in bulk rejection:', error)
+        return { success: false, message: 'Failed to execute bulk purge' }
+    }
+
+    revalidatePath('/sandbox')
+    return { success: true }
+}
