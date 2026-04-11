@@ -541,7 +541,7 @@ export async function batchInsertProspects(data: any[]) {
                     ${prospect.company || 'Unknown'}, ${prospect.contact_person || ''}, ${prospect.email || ''}, ${prospect.phone || null},
                     ${prospect.company_social || null}, ${prospect.decision_maker_social || null}, ${prospect.sector || null},
                     ${prospect.revenue_listed || false}, ${isNaN(revNum!) ? null : revNum}, ${score},
-                    'RAW', 'Cold Lead', 'Apollo'
+                    'RAW', 'New Lead', 'Apollo'
                 )
             `
         }

@@ -28,7 +28,12 @@ export async function getLeads(): Promise<Lead[]> {
             source: lead.source,
             assigned_to: lead.assigned_to,
             email: lead.email,
-            lifecycle_stage: lead.lifecycle_stage
+            lifecycle_stage: lead.lifecycle_stage,
+            revenue_amount: lead.revenue_amount ? Number(lead.revenue_amount) : null,
+            decision_maker_social: lead.decision_maker_social || null,
+            decision_maker_email: lead.email || null,
+            sector: lead.sector || null,
+            website_url: lead.website_url || null,
         }))
     } catch (error) {
         console.error("Error fetching leads:", error)
@@ -53,7 +58,12 @@ export async function getProspects(): Promise<Lead[]> {
             assigned_to: lead.assigned_to,
             email: lead.email,
             lifecycle_stage: lead.lifecycle_stage,
-            score: Number(lead.score) || 0
+            score: Number(lead.score) || 0,
+            revenue_amount: lead.revenue_amount ? Number(lead.revenue_amount) : null,
+            decision_maker_social: lead.decision_maker_social || null,
+            decision_maker_email: lead.email || null,
+            sector: lead.sector || null,
+            website_url: lead.website_url || null,
         }))
     } catch (error) {
         console.error("Error fetching leads:", error)
@@ -125,11 +135,11 @@ export async function getTeamMembers() {
 
 // Static fallback data (kept for reference/offline dev)
 export const leads: Lead[] = [
-    { id: "1", companyName: "Acme Corp", poc: "John Doe", value: 5000, status: "Cold Lead", source: "Apollo" },
-    { id: "2", companyName: "Globex", poc: "Jane Smith", value: 12000, status: "Hot Lead", source: "Website" },
-    { id: "3", companyName: "Soylent Corp", poc: "Bob Johnson", value: 8500, status: "Negotiation", source: "Referral" },
-    { id: "4", companyName: "Initech", poc: "Peter Gibbons", value: 15000, status: "Closed", source: "Seamless" },
-    { id: "5", companyName: "Umbrella Corp", poc: "Albert Wesker", value: 25000, status: "Hot Lead", source: "Apollo" },
+    { id: "1", companyName: "Acme Corp", poc: "John Doe", value: 5000, status: "New Lead", source: "Apollo" },
+    { id: "2", companyName: "Globex", poc: "Jane Smith", value: 12000, status: "Contacted", source: "Website" },
+    { id: "3", companyName: "Soylent Corp", poc: "Bob Johnson", value: 8500, status: "Meeting Booked", source: "Referral" },
+    { id: "4", companyName: "Initech", poc: "Peter Gibbons", value: 15000, status: "Closed Won", source: "Seamless" },
+    { id: "5", companyName: "Umbrella Corp", poc: "Albert Wesker", value: 25000, status: "Contacted", source: "Apollo" },
 ]
 
 export const projects: Project[] = [
