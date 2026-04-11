@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getProspects } from '@/lib/data'
-import { CsvUploader } from '@/components/shared/CsvUploader'
+import { SmartCsvUploader } from '@/components/shared/SmartCsvUploader'
 import { SandboxTable } from '@/components/operations/SandboxTable'
 import { Badge } from '@/components/ui/badge'
 
@@ -17,7 +17,7 @@ export default async function ProspectsPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-                <CsvUploader />
+                <SmartCsvUploader />
             </div>
 
             <Card className="bg-[#0B0C10] border-white/10 mt-6">
