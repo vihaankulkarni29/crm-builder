@@ -34,16 +34,18 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { updateLeadStatus, convertLeadToProject, deleteLead } from "@/app/actions"
 import { toast } from "sonner"
 import { AddLeadDialog } from "./AddLeadDialog"
+import { LeadCard } from "./LeadCard"
 
 interface KanbanBoardProps {
     initialLeads: Lead[]
 }
 
-const columns: { id: Lead["status"]; title: string }[] = [
-    { id: "Cold Lead", title: "Cold Leads" },
-    { id: "Hot Lead", title: "Hot Leads" },
-    { id: "Negotiation", title: "Negotiation" },
-    { id: "Closed", title: "Closed" },
+const columns: { id: Lead["status"]; title: string; color: string }[] = [
+    { id: "New Lead",       title: "New Lead",       color: "text-blue-400" },
+    { id: "Contacted",     title: "Contacted",      color: "text-purple-400" },
+    { id: "Meeting Booked",title: "Meeting Booked", color: "text-yellow-400" },
+    { id: "Closed Won",    title: "Closed Won",     color: "text-emerald-400" },
+    { id: "Disqualified",  title: "Disqualified",   color: "text-red-400" },
 ]
 
 export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
@@ -73,8 +75,8 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
 
         if (!draggedLead) return
 
-        // Smart Convert Interception
-        if (newStatus === 'Closed' && source.droppableId !== 'Closed') {
+        // Smart Convert Interception: trigger project creation when dragged to Closed Won
+        if (newStatus === 'Closed Won' && source.droppableId !== 'Closed Won') {
             setLeadToConvert(draggedLead)
             setConvertDialogOpen(true)
             return
@@ -100,7 +102,7 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
         if (result.success) {
             toast.success(result.message)
             // Update local state to move lead to closed
-            setLeads(prev => prev.map(l => l.id === leadToConvert.id ? { ...l, status: 'Closed' } : l))
+            setLeads(prev => prev.map(l => l.id === leadToConvert.id ? { ...l, status: 'Closed Won' } : l))
             setConvertDialogOpen(false)
         } else {
             toast.error(result.message)
@@ -127,8 +129,8 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
 
                         return (
                             <div key={column.id} className="w-[300px] min-w-[300px] flex flex-col gap-4">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="font-semibold text-sm text-muted-foreground uppercase">{column.title}</h3>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className={`font-semibold text-sm uppercase tracking-wider ${column.color}`}>{column.title}</h3>
                                     <Badge variant="secondary" className="rounded-full px-2 py-0.5">
                                         {columnLeads.length}
                                     </Badge>
@@ -142,55 +144,29 @@ export function KanbanBoard({ initialLeads }: KanbanBoardProps) {
                                             className={`flex flex-col gap-3 min-h-[150px] rounded-md p-2 transition-colors ${snapshot.isDraggingOver ? "bg-muted/50" : ""
                                                 }`}
                                         >
-                                            {columnLeads.map((lead, index) => (
+                                            {columnLeads.map((lead, index) => {
+                                                // ── Whale Badge logic ──────────────────────────
+                                                const rev = lead.revenue_amount ?? 0
+                                                const whaleBorder =
+                                                    rev > 10_000_000
+                                                        ? 'ring-2 ring-red-500 shadow-[0_0_15px_rgba(239,68,68,0.25)]'
+                                                        : rev >= 1_000_000
+                                                        ? 'ring-1 ring-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.15)]'
+                                                        : ''
+
+                                                return (
                                                 <Draggable key={lead.id} draggableId={lead.id} index={index}>
                                                     {(provided, snapshot) => (
-                                                        <Card
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                            className={`cursor-grab hover:border-primary/50 transition-colors ${snapshot.isDragging ? "shadow-lg border-primary/50 rotate-2" : ""
-                                                                }`}
-                                                            style={provided.draggableProps.style}
-                                                        >
-                                                            <CardHeader className="p-4 pb-2 space-y-0">
-                                                                <div className="flex justify-between items-start">
-                                                                    <Badge variant="outline" className="mb-2 w-fit">
-                                                                        {lead.source}
-                                                                    </Badge>
-                                                                    <DropdownMenu>
-                                                                        <DropdownMenuTrigger asChild>
-                                                                            <Button variant="ghost" size="icon" className="h-6 w-6">
-                                                                                <MoreHorizontal className="h-4 w-4" />
-                                                                            </Button>
-                                                                        </DropdownMenuTrigger>
-                                                                        <DropdownMenuContent align="end">
-                                                                            <DropdownMenuItem
-                                                                                onClick={() => handleDelete(lead.id)}
-                                                                                className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                                                                            >
-                                                                                <Trash2 className="mr-2 h-4 w-4" /> Delete Lead
-                                                                            </DropdownMenuItem>
-                                                                        </DropdownMenuContent>
-                                                                    </DropdownMenu>
-                                                                </div>
-                                                                <CardTitle className="text-base font-bold">{lead.companyName}</CardTitle>
-                                                                <CardDescription className="text-xs">{lead.poc}</CardDescription>
-                                                            </CardHeader>
-                                                            <CardContent className="p-4 pt-2">
-                                                                <div className="text-sm font-medium">
-                                                                    Est. Value: ₹{lead.value.toLocaleString()}
-                                                                </div>
-                                                                {lead.assigned_to && lead.assigned_to !== 'Unassigned' && (
-                                                                    <Badge variant="outline" className="mt-2 text-xs w-fit">
-                                                                        {lead.assigned_to}
-                                                                    </Badge>
-                                                                )}
-                                                            </CardContent>
-                                                        </Card>
+                                                        <LeadCard
+                                                            lead={lead}
+                                                            provided={provided}
+                                                            snapshot={snapshot}
+                                                            whaleBorder={whaleBorder}
+                                                            onDelete={handleDelete}
+                                                        />
                                                     )}
                                                 </Draggable>
-                                            ))}
+                                            )})}
                                             {provided.placeholder}
                                             <AddLeadDialog />
                                         </div>

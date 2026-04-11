@@ -3,12 +3,18 @@ export interface Lead {
     companyName: string
     poc: string
     value: number
-    status: "Cold Lead" | "Hot Lead" | "Negotiation" | "Closed" | "Dead"
+    status: "New Lead" | "Contacted" | "Meeting Booked" | "Closed Won" | "Disqualified"
     source: "Apollo" | "Seamless" | "Website" | "Referral"
     assigned_to?: string
     email?: string
     lifecycle_stage?: string
     score?: number
+    // Rich fields for weaponized cards
+    revenue_amount?: number | null
+    decision_maker_social?: string | null
+    decision_maker_email?: string | null
+    sector?: string | null
+    website_url?: string | null
 }
 
 export interface Project {

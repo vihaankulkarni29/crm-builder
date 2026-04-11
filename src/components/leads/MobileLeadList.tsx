@@ -7,14 +7,14 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import type { Lead } from '@/types'
 
-const statusOptions = ['Cold Lead', 'Hot Lead', 'Negotiation', 'Closed', 'Dead']
+const statusOptions = ['New Lead', 'Contacted', 'Meeting Booked', 'Closed Won', 'Disqualified']
 
 const statusColors: Record<string, string> = {
-    'Cold Lead': 'bg-blue-600',
-    'Hot Lead': 'bg-orange-600',
-    'Negotiation': 'bg-yellow-600',
-    'Closed': 'bg-green-600',
-    'Dead': 'bg-red-600',
+    'New Lead':       'bg-blue-600',
+    'Contacted':      'bg-purple-600',
+    'Meeting Booked': 'bg-yellow-600',
+    'Closed Won':     'bg-emerald-600',
+    'Disqualified':   'bg-red-700',
 }
 
 export function MobileLeadList({ leads }: { leads: Lead[] }) {

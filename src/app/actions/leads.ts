@@ -91,7 +91,7 @@ export async function bulkInsertLeads(leads: LeadData[]) {
                     ${lead.revenue_listed || false},
                     ${isNaN(revNum!) ? null : revNum},
                     ${score},
-                    'RAW', 'Cold Lead', 'Apollo'
+                    'RAW', 'New Lead', 'Apollo'
                 )
                 ON CONFLICT (website_url) DO NOTHING
             `

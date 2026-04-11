@@ -14,7 +14,7 @@ export default async function Dashboard() {
         getGlobalActivity()
     ]);
 
-    const activeLeads = leads.filter((l) => l.status !== "Closed" && l.status !== "Dead").length;
+    const activeLeads = leads.filter((l) => l.status !== "Closed Won" && l.status !== "Disqualified").length;
     const activeProjects = projects.filter((p) => p.status !== "Completed").length;
     const totalRevenue = invoices
         .filter((i) => i.status === "Paid")
