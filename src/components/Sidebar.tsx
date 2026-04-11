@@ -7,16 +7,21 @@ import { cn } from "@/lib/utils"
 import { LayoutDashboard, Users, Briefcase, DollarSign, UserCircle, Bot, Settings, LogOut, Filter } from "lucide-react"
 import { HelpDialog } from "@/components/ui/help-dialog"
 
-// ── Strike 1: Enterprise Workspace Logo ──────────────────────────────────────
+// ── Strike 1 & 2: Image-based Workspace Logo ─────────────────────────────────
+import Image from "next/image"
+
 function WorkspaceLogo() {
     return (
         <div className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white shadow-[0_0_10px_rgba(37,99,235,0.3)]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                    <line x1="12" y1="22.08" x2="12" y2="12" />
-                </svg>
+            <div className="relative h-8 w-8 overflow-hidden rounded-md bg-gray-900 flex items-center justify-center">
+                <Image
+                    src="/logo.png"
+                    alt="Workspace Logo"
+                    width={28}
+                    height={28}
+                    className="object-contain"
+                    priority
+                />
             </div>
             <span className="text-lg font-bold tracking-wide text-gray-100">RFRNCS</span>
         </div>
